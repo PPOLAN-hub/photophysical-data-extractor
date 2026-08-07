@@ -905,7 +905,7 @@ details.ledger>summary{{cursor:pointer;list-style:none;padding:15px 18px;font-we
 details.ledger>summary::-webkit-details-marker{{display:none}}
 .evidence-list{{list-style:none;margin:0;padding:0;border-top:1px solid var(--line)}}
 .evidence-item{{padding:9px 14px;border-bottom:1px solid #e7edf4;background:#fff;scroll-margin-top:20px}}
-.evidence-item:last-child{{border-bottom:0}}.evidence-item:target{{outline:3px solid #9dc1ff;background:#f7fbff}}
+.evidence-item:last-child{{border-bottom:0}}.evidence-item:target{{outline:3px solid #63b784;background:#e8f7ec}}
 .evidence-line{{display:flex;align-items:center;gap:8px;min-width:0;font-size:12px;line-height:1.5}}
 .evidence-id{{font:750 12px/1 ui-monospace,SFMono-Regular,Consolas,monospace;color:var(--blue)}}
 .evidence-row{{color:var(--muted);font-size:11px;white-space:nowrap}}.evidence-fields{{flex:1;min-width:180px}}.evidence-type{{color:var(--muted);font:11px ui-monospace,SFMono-Regular,Consolas,monospace;white-space:nowrap}}
