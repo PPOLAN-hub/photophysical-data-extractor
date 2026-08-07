@@ -1,4 +1,4 @@
-# Pure-organic long-lived emission extraction policy
+# Photophysical data extraction policy
 
 ## Non-negotiable interpretation boundaries
 

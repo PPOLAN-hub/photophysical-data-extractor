@@ -2,7 +2,7 @@
 
 ## 1. 这是什么
 
-`rtp-paper-extractor` 是面向纯有机长寿命发光文献的 Agent Skill。它负责指导智能体从论文正文和 Supporting Information（SI）中抽取可溯源数据，生成：
+`photophysical-data-extractor` 是面向有机材料光物理文献的 Agent Skill，覆盖荧光、磷光/RTP、延迟荧光/TADF、余辉及相关速率常数。它负责指导智能体从论文正文和 Supporting Information（SI）中抽取可溯源数据，生成：
 
 - `paper_data.json`：机器可读、可校验的唯一数据源；
 - `report.html`：供阅读、比较和人工复核的网页报告；
@@ -29,19 +29,19 @@ python -m pip install pypdf PyMuPDF PyYAML
 Codex 用户可将仓库放入：
 
 ```text
-%CODEX_HOME%/skills/rtp-paper-extractor/
+%CODEX_HOME%/skills/photophysical-data-extractor/
 ```
 
 Deep Code/兼容 Agent Skills 的工具可放入用户级目录：
 
 ```text
-~/.agents/skills/rtp-paper-extractor/
+~/.agents/skills/photophysical-data-extractor/
 ```
 
 或项目级目录：
 
 ```text
-.deepcode/skills/rtp-paper-extractor/
+.deepcode/skills/photophysical-data-extractor/
 ```
 
 安装后应保留完整的 `SKILL.md`、`scripts/`、`references/` 和 `report_config.json`。
@@ -51,7 +51,7 @@ Deep Code/兼容 Agent Skills 的工具可放入用户级目录：
 准备正文 PDF 和 SI PDF，然后向 Agent 发出类似指令：
 
 ```text
-使用 rtp-paper-extractor 抽取这篇纯有机长寿命发光论文及其 SI。
+使用 photophysical-data-extractor 抽取这篇有机材料光物理论文及其 SI。
 要求生成 paper_data.json 和 report.html，并在渲染前通过校验。
 ```
 

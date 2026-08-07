@@ -1,4 +1,4 @@
 interface:
-  display_name: "Long-Lived Emission Extractor"
-  short_description: "Create evidence-traceable long-lived-emission reports"
-  default_prompt: "Use $rtp-paper-extractor to extract evidence-traceable pure-organic long-lived-emission data from this paper and its supporting information."
+  display_name: "Photophysical Data Extractor"
+  short_description: "Extract traceable photophysical literature data"
+  default_prompt: "Use $photophysical-data-extractor to extract evidence-traceable photophysical data from this paper and its supporting information."

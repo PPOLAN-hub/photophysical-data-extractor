@@ -1,11 +1,11 @@
 ---
-name: rtp-paper-extractor
-description: Extract evidence-traceable photophysical data, article KOI, innovation, and logical structure from one or a batch of pure-organic long-lived-emission paper PDFs and their Supporting Information, then produce validated JSON and HTML review reports. Use for RTP, phosphorescence, afterglow, delayed fluorescence, TADF, persistent luminescence, PLQY, lifetime, host-matrix, rate constants, main/SI pairing, and batch literature organization where every value or synthesized claim must link to source evidence.
+name: photophysical-data-extractor
+description: Extract evidence-traceable photophysical data, article KOI, innovation, and logical structure from one or a batch of organic-material paper PDFs and their Supporting Information, then produce validated JSON and HTML review reports. Use for fluorescence, phosphorescence, RTP, afterglow, delayed fluorescence, TADF, persistent luminescence, PLQY, lifetime, spectra, host-matrix, rate constants, main/SI pairing, and batch literature organization where every value or synthesized claim must link to source evidence.
 ---
 
-# Pure-Organic Long-Lived Emission Extractor
+# Photophysical Data Extractor
 
-Extract evidence, not plausible values. Accept one paper PDF and optional SI, or a deterministically paired batch; write canonical JSON and render HTML audit reports.
+Extract evidence, not plausible values. Accept one organic photophysical paper PDF and optional SI, or a deterministically paired batch; write canonical JSON and render HTML audit reports. Cover prompt fluorescence as well as long-lived emission while keeping every mechanism and measurement condition distinct.
 
 ## Required deliverables
 
