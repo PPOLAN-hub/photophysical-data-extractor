@@ -629,8 +629,8 @@ def table_source_label(location):
     return "、".join(dict.fromkeys(matches)) or "所列表格"
 
 
-def evidence_cards(ledger):
-    cards = []
+def evidence_list(ledger):
+    rows = []
     for evidence in ledger:
         evidence_id = evidence.get("evidence_id")
         note = evidence.get("manual_check_note")
@@ -639,7 +639,7 @@ def evidence_cards(ledger):
         evidence_type = evidence.get("type")
         if confidence == "high" and evidence_type == "table_value":
             extracted_html = ""
-            quote_html = f"<p class='source-cue'><b>表格证据：</b>来自 {esc(table_source_label(evidence.get('location')))}</p>"
+            quote_html = ""
             note_html = ""
         elif confidence == "high":
             extracted_html = ""
@@ -657,21 +657,20 @@ def evidence_cards(ledger):
             )
             review_note = note or "该证据置信度不足，请对照原文人工复核。"
             note_html = f"<p class='evidence-note'><b>需人工复核：</b>{scientific_value(review_note)}</p>"
-        cards.append(
-            f"<article class='evidence-card' id='{esc(evidence_id)}'>"
-            "<header>"
-            f"<div><span class='evidence-id'>{esc(str(evidence_id).split('--', 1)[-1])}</span>"
-            f"<span class='evidence-row'>{esc(evidence.get('row_id'))}</span></div>"
+        rows.append(
+            f"<li class='evidence-item' id='{esc(evidence_id)}'>"
+            "<div class='evidence-line'>"
+            f"<span class='evidence-id'>{esc(str(evidence_id).split('--', 1)[-1])}</span>"
+            f"<span class='evidence-row'>{esc(evidence.get('row_id'))}</span>"
+            f"<strong class='evidence-fields'>{multi_field_label(evidence.get('field_name'))}</strong>"
+            f"<span class='location'><b>位置：</b>{esc(evidence.get('location'))}</span>"
+            f"<span class='evidence-type'>{esc(EVIDENCE_TYPE_LABELS.get(evidence.get('type'), evidence.get('type')))}</span>"
             f"{confidence_badge(evidence.get('confidence'))}"
-            "</header>"
-            f"<h4>{multi_field_label(evidence.get('field_name'))}</h4>"
-            f"{extracted_html}"
-            f"<p class='location'><b>位置：</b>{esc(evidence.get('location'))}</p>"
-            f"{quote_html}{note_html}"
-            f"<footer>{esc(EVIDENCE_TYPE_LABELS.get(evidence.get('type'), evidence.get('type')))}</footer>"
-            "</article>"
+            "</div>"
+            f"<div class='evidence-detail'>{extracted_html}{quote_html}{note_html}</div>"
+            "</li>"
         )
-    return "".join(cards)
+    return "<ol class='evidence-list'>" + "".join(rows) + "</ol>"
 
 
 def paper_information(paper):
@@ -754,7 +753,7 @@ def review_and_evidence_panel(data):
         "<div class='section-title'><h2>证据台账与人工复核</h2><p>高置信度证据精简显示；中低置信度保留复核提示</p></div>"
         "<div class='audit-panel'>"
         f"<div class='review'><h3>人工复核（{len(review_items)} 项）</h3><ul>{review_html}</ul></div>"
-        f"<div class='evidence-grid'>{evidence_cards(ledger)}</div>"
+        f"{evidence_list(ledger)}"
         "</div></section>"
     )
 
@@ -834,7 +833,7 @@ a{{color:var(--blue)}}
 .article-info-table th{{width:92px;white-space:nowrap;background:#f7f9fc;color:#475569;font-weight:750}}.article-info-table td{{background:#fff}}
 .article-title{{font-weight:850}}.article-doi{{color:#c5162e;font-weight:850}}.article-stats td{{font-weight:800;color:var(--blue)}}
 .article-data-body{{padding:14px}}.data-section{{margin:0}}.audit-section{{margin-top:18px}}.audit-panel{{overflow:hidden;background:#fff;border:1px solid var(--line);border-radius:9px}}
-.audit-panel .review{{border-width:0 0 1px 4px;border-radius:0}}.audit-panel .review h3{{margin:0 0 8px;font-size:12px}}.audit-panel .evidence-grid{{border-top:0}}
+.audit-panel .review{{border-width:0 0 1px 4px;border-radius:0}}.audit-panel .review h3{{margin:0 0 8px;font-size:12px}}
 .hero{{background:#fff;border:1px solid var(--line);border-top:5px solid var(--blue);border-radius:12px;padding:28px 30px;box-shadow:0 8px 24px rgba(24,34,53,.06)}}
 .eyebrow{{margin:0 0 6px;color:var(--blue);font-weight:700;letter-spacing:.08em}}
 h1{{max-width:1100px;margin:0;font-size:clamp(25px,3vw,38px);line-height:1.25}}
@@ -889,24 +888,23 @@ h1{{max-width:1100px;margin:0;font-size:clamp(25px,3vw,38px);line-height:1.25}}
 details.ledger{{background:#fff;border:1px solid var(--line);border-radius:10px;overflow:hidden}}
 details.ledger>summary{{cursor:pointer;list-style:none;padding:15px 18px;font-weight:750;font-size:16px;background:#fbfcfe}}
 details.ledger>summary::-webkit-details-marker{{display:none}}
-.evidence-grid{{display:grid;grid-template-columns:repeat(auto-fit,minmax(340px,1fr));gap:12px;padding:14px;border-top:1px solid var(--line)}}
-.evidence-card{{border:1px solid var(--line);border-radius:8px;padding:13px;background:#fff;scroll-margin-top:20px}}
-.evidence-card:target{{outline:3px solid #9dc1ff;background:#f7fbff}}
-.evidence-card header{{display:flex;justify-content:space-between;align-items:center;gap:10px}}
+.evidence-list{{list-style:none;margin:0;padding:0;border-top:1px solid var(--line)}}
+.evidence-item{{padding:9px 14px;border-bottom:1px solid #e7edf4;background:#fff;scroll-margin-top:20px}}
+.evidence-item:last-child{{border-bottom:0}}.evidence-item:target{{outline:3px solid #9dc1ff;background:#f7fbff}}
+.evidence-line{{display:flex;align-items:center;gap:8px;min-width:0;font-size:12px;line-height:1.5}}
 .evidence-id{{font:750 12px/1 ui-monospace,SFMono-Regular,Consolas,monospace;color:var(--blue)}}
-.evidence-row{{margin-left:7px;color:var(--muted);font-size:11px}}
+.evidence-row{{color:var(--muted);font-size:11px;white-space:nowrap}}.evidence-fields{{flex:1;min-width:180px}}.evidence-type{{color:var(--muted);font:11px ui-monospace,SFMono-Regular,Consolas,monospace;white-space:nowrap}}
 .confidence{{border-radius:999px;padding:2px 8px;font-size:11px;font-weight:750}}.confidence.high{{background:var(--green-soft);color:var(--green)}}.confidence.medium{{background:var(--amber-soft);color:var(--amber)}}.confidence.low{{background:var(--red-soft);color:var(--red)}}
-.evidence-card h4{{margin:9px 0 5px;font-size:15px}}.evidence-card p{{margin:4px 0}}
-.location{{color:#435168}}blockquote{{margin:9px 0 6px;padding:9px 11px;border-left:3px solid #84a9df;background:#f6f9fd;color:#334155}}
+.evidence-detail{{margin-left:82px}}.evidence-detail:empty{{display:none}}.evidence-detail p{{margin:4px 0}}
+.location{{color:#435168}}blockquote{{margin:5px 0 2px;padding:6px 9px;border-left:3px solid #84a9df;background:#f6f9fd;color:#334155}}
 blockquote span{{display:block;margin-bottom:2px;color:var(--blue);font-size:11px;font-weight:750}}
 .evidence-note{{color:#725e28;background:#fff9e9;padding:7px 9px;border-radius:5px}}
 .source-cue{{color:#344d6b;background:#f1f6fb;padding:7px 9px;border-radius:5px}}.compact-quote{{padding:7px 9px}}
-.evidence-card footer{{margin-top:8px;color:var(--muted);font:11px ui-monospace,SFMono-Regular,Consolas,monospace}}
 .review{{background:#fff;border:1px solid var(--line);border-left:4px solid var(--amber);border-radius:9px;padding:13px 18px}}
 .review li{{margin:6px 0}}
 .empty{{color:var(--muted)}}
 sub{{font-size:.72em;line-height:0}}
-@media(max-width:820px){{.page{{width:min(100% - 18px,1440px)}}.summary{{grid-template-columns:repeat(2,1fr)}}.paper-grid,.koi-grid{{grid-template-columns:1fr}}.article-info-table{{min-width:900px}}}}
+@media(max-width:820px){{.page{{width:min(100% - 18px,1440px)}}.summary{{grid-template-columns:repeat(2,1fr)}}.paper-grid,.koi-grid{{grid-template-columns:1fr}}.article-info-table{{min-width:900px}}.evidence-line{{align-items:flex-start;flex-wrap:wrap}}.evidence-detail{{margin-left:0}}}}
 @media print{{body{{background:#fff}}.page{{width:100%;margin:0}}.hero,.summary-card{{box-shadow:none}}details.ledger{{break-before:page}}}}
 </style>
 </head>
