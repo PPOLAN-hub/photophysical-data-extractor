@@ -26,7 +26,7 @@ Read `references/extraction-policy.md` and `references/data-schema.md` before ex
 4. Add field-level evidence before adding a specific value, including compound, host/matrix, concentration, sample state, and every measurement condition. Use short quotes and a resolvable page/table/figure/SI location.
 5. Extract paper-level KOI, a one-sentence innovation, and a problem-to-application logic skeleton. Store these once under `article_analysis`; link every synthesized item to paper-level evidence with `row_id: PAPER`.
 6. Mark missing information with a status, not a guessed value. Record cross-source conflicts and manual-review items.
-7. Validate JSON, render HTML, and report the output paths.
+7. Validate JSON and render HTML. In the main table, show each solid formulation's Host and doping ratio once; keep solution solvent/concentration out of those two cells and identify solution, RT/77 K, and doped-film conditions through metric footnotes. Report the output paths.
 
 ## Batch workflow
 

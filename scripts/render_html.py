@@ -383,6 +383,29 @@ def all_condition_field(records, group, name, registry, labels):
     return "<span class='condition-values'>" + " / ".join(entries) + "</span>"
 
 
+def formulation_field(records, name):
+    """Render the doped/solid formulation once; solution media belong in metric footnotes."""
+    entries = []
+    seen = set()
+    for sample in records:
+        identity = sample.get("identity", {})
+        sample_state = raw(identity.get("sample_state"), "").lower()
+        if "solution" in sample_state or "溶液" in sample_state:
+            continue
+        field = identity.get(name)
+        if not isinstance(field, dict) or field.get("status") != "reported":
+            continue
+        value = table_raw(name, field)
+        key = re.sub(r"<[^>]+>", "", value)
+        if key in seen:
+            continue
+        seen.add(key)
+        entries.append(value + evidence_link(field.get("evidence_id")))
+    if not entries:
+        return "<span class='table-empty'>—</span>"
+    return " / ".join(entries)
+
+
 def assignment_cell(records):
     values = []
     evidence_ids = []
@@ -436,6 +459,8 @@ def data_table(samples, analysis):
                 value = esc(compound) + (evidence_link(evidence_ids[0]) if evidence_ids else "")
             elif name == "emission_assignment":
                 value = assignment_cell(records)
+            elif name in {"host_matrix", "doping_ratio"}:
+                value = formulation_field(records, name)
             else:
                 value = all_condition_field(records, group, name, condition_registry, condition_labels)
             cell_class = "compound-cell" if name == "compound" else ""
