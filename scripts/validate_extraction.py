@@ -1,0 +1,50 @@
+#!/usr/bin/env python3
+"""Check evidence integrity for a canonical RTP extraction JSON file."""
+import json
+import sys
+from pathlib import Path
+
+VALID_TYPES = {"direct_text", "table_value", "figure_estimate", "calculated_from_reported_values", "author_assignment"}
+VALID_STATUS = {"reported", "not_reported", "uncertain"}
+
+
+def main(path_text: str) -> int:
+    data = json.loads(Path(path_text).read_text(encoding="utf-8"))
+    problems = []
+    ledger = {e.get("evidence_id"): e for e in data.get("evidence_ledger", [])}
+    if len(ledger) != len(data.get("evidence_ledger", [])):
+        problems.append("duplicate or missing evidence_id")
+    for evidence_id, e in ledger.items():
+        if not evidence_id or e.get("type") not in VALID_TYPES:
+            problems.append(f"invalid evidence type/id: {evidence_id}")
+        if e.get("type") == "figure_estimate" and e.get("confidence") == "high":
+            problems.append(f"{evidence_id}: figure estimate cannot be high confidence")
+        if e.get("type") == "figure_estimate" and "图中估读" not in e.get("manual_check_note", ""):
+            problems.append(f"{evidence_id}: figure estimate note must contain 图中估读")
+    for sample in data.get("samples", []):
+        row_id = sample.get("row_id")
+        for name, field in sample.get("fields", {}).items():
+            status = field.get("status")
+            if status not in VALID_STATUS:
+                problems.append(f"{row_id}.{name}: invalid status")
+            evidence_id = field.get("evidence_id")
+            if status == "reported" and (field.get("raw_value") is None or evidence_id not in ledger):
+                problems.append(f"{row_id}.{name}: reported value needs valid evidence_id")
+            if status != "reported" and field.get("raw_value") is not None:
+                problems.append(f"{row_id}.{name}: non-reported status must have null raw_value")
+            if name == "tau_p" and status == "reported":
+                quote = (ledger.get(evidence_id) or {}).get("quote", "").lower()
+                if "phosphor" not in quote:
+                    problems.append(f"{row_id}.tau_p: evidence quote must explicitly support phosphorescence attribution")
+    if problems:
+        print("INVALID")
+        print("\n".join(problems))
+        return 1
+    print(f"VALID: {len(data.get('samples', []))} samples, {len(ledger)} evidence records")
+    return 0
+
+
+if __name__ == "__main__":
+    if len(sys.argv) != 2:
+        raise SystemExit("Usage: validate_extraction.py paper_data.json")
+    raise SystemExit(main(sys.argv[1]))

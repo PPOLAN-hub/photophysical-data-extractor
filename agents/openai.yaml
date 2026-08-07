@@ -1,0 +1,4 @@
+interface:
+  display_name: "RTP Paper Extractor"
+  short_description: "Create evidence-traceable RTP JSON and HTML reports"
+  default_prompt: "Use $rtp-paper-extractor to extract evidence-traceable RTP data from this paper and its supporting information."
