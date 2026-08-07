@@ -611,17 +611,50 @@ def confidence_badge(value):
     return f"<span class='confidence {esc(key)}'>{labels.get(key, esc(value))}</span>"
 
 
+def quote_prefix(value, word_limit=10, char_limit=46):
+    text = re.sub(r"\s+", " ", str(value or "")).strip()
+    if not text:
+        return ""
+    words = text.split(" ")
+    if len(words) > 1:
+        prefix = " ".join(words[:word_limit])
+        return prefix + ("…" if len(words) > word_limit else "")
+    return text[:char_limit] + ("…" if len(text) > char_limit else "")
+
+
+def table_source_label(location):
+    matches = re.findall(r"\bTables?\s+[A-Za-z]?[0-9]+(?:\s*[–-]\s*[A-Za-z]?[0-9]+)?", str(location or ""), re.IGNORECASE)
+    return "、".join(dict.fromkeys(matches)) or "所列表格"
+
+
 def evidence_cards(ledger):
     cards = []
     for evidence in ledger:
         evidence_id = evidence.get("evidence_id")
         note = evidence.get("manual_check_note")
         quote = evidence.get("quote")
-        note_html = f"<p class='evidence-note'><b>复核提示：</b>{scientific_value(note)}</p>" if note else ""
-        quote_html = (
-            f"<blockquote><span>原文短引</span>“{esc(quote)}”</blockquote>"
-            if quote else "<blockquote class='missing-quote'>未提供原文短引</blockquote>"
-        )
+        confidence = str(evidence.get("confidence") or "").lower()
+        evidence_type = evidence.get("type")
+        if confidence == "high" and evidence_type == "table_value":
+            extracted_html = ""
+            quote_html = f"<p class='source-cue'><b>表格证据：</b>来自 {esc(table_source_label(evidence.get('location')))}</p>"
+            note_html = ""
+        elif confidence == "high":
+            extracted_html = ""
+            prefix = quote_prefix(quote)
+            quote_html = (
+                f"<blockquote class='compact-quote'><span>原文开头</span>“{esc(prefix)}”</blockquote>"
+                if prefix else "<blockquote class='missing-quote'>未提供原文开头</blockquote>"
+            )
+            note_html = ""
+        else:
+            extracted_html = f"<p class='extracted'><b>抽取值：</b>{scientific_value(evidence.get('extracted_value'))}</p>"
+            quote_html = (
+                f"<blockquote><span>原文短引</span>“{esc(quote)}”</blockquote>"
+                if quote else "<blockquote class='missing-quote'>未提供原文短引</blockquote>"
+            )
+            review_note = note or "该证据置信度不足，请对照原文人工复核。"
+            note_html = f"<p class='evidence-note'><b>需人工复核：</b>{scientific_value(review_note)}</p>"
         cards.append(
             f"<article class='evidence-card' id='{esc(evidence_id)}'>"
             "<header>"
@@ -630,7 +663,7 @@ def evidence_cards(ledger):
             f"{confidence_badge(evidence.get('confidence'))}"
             "</header>"
             f"<h4>{multi_field_label(evidence.get('field_name'))}</h4>"
-            f"<p class='extracted'><b>抽取值：</b>{scientific_value(evidence.get('extracted_value'))}</p>"
+            f"{extracted_html}"
             f"<p class='location'><b>位置：</b>{esc(evidence.get('location'))}</p>"
             f"{quote_html}{note_html}"
             f"<footer>{esc(EVIDENCE_TYPE_LABELS.get(evidence.get('type'), evidence.get('type')))}</footer>"
@@ -745,6 +778,7 @@ details.ledger>summary::-webkit-details-marker{{display:none}}
 .location{{color:#435168}}blockquote{{margin:9px 0 6px;padding:9px 11px;border-left:3px solid #84a9df;background:#f6f9fd;color:#334155}}
 blockquote span{{display:block;margin-bottom:2px;color:var(--blue);font-size:11px;font-weight:750}}
 .evidence-note{{color:#725e28;background:#fff9e9;padding:7px 9px;border-radius:5px}}
+.source-cue{{color:#344d6b;background:#f1f6fb;padding:7px 9px;border-radius:5px}}.compact-quote{{padding:7px 9px}}
 .evidence-card footer{{margin-top:8px;color:var(--muted);font:11px ui-monospace,SFMono-Regular,Consolas,monospace}}
 .review{{background:#fff;border:1px solid var(--line);border-left:4px solid var(--amber);border-radius:9px;padding:13px 18px}}
 .review li{{margin:6px 0}}

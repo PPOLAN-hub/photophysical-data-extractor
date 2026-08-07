@@ -15,6 +15,8 @@
 
 Use a stable location such as `Main PDF p. 4, Table 1, row 2`, `SI p. 12, Table S3`, or `Main PDF p. 6, Fig. 3c caption`. For figures, record the visual feature and the estimate method.
 
+Keep the ledger compact. For high-confidence table evidence, put the exact table identifier in `location`, keep `quote` to a table/cell cue instead of repeating the extracted values, and leave `manual_check_note` empty. For other high-confidence evidence, retain only the first 6–10 useful source words in `quote` and leave `manual_check_note` empty. Preserve a complete short clause and an explicit manual-check note only for medium/low confidence, conflicts, figure estimates, ambiguous definitions, or calculations.
+
 ## Article-level KOI
 
 - Treat KOI as a retrieval-oriented paper summary: research problem, knowledge gap, design strategy, mechanism, key result, application, and boundaries.

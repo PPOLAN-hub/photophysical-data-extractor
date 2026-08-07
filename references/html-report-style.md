@@ -14,5 +14,6 @@
 - Apply the same scientific-label formatter to manual-review text, including forms such as `PhiF`, `PhiP`, `tauP`, and `lambdaP`; render them as `Φ<sub>F</sub>`, `Φ<sub>P</sub>`, `τ<sub>P</sub>`, and `λ<sub>P</sub>`.
 - Show reported metrics prominently and keep missing fields out of the visual comparison area. This is a display choice only; do not remove missing statuses from JSON.
 - Render evidence as readable cards containing the field label, extracted value, precise location, the shortest useful source-text fragment, extraction type, confidence, and manual-check note.
+- Keep high-confidence evidence cards index-like: for table evidence show only the table identifier and location; for non-table evidence show only the first 6–10 source words. Do not repeat the extracted value or display a review note on high-confidence cards. Show the extracted value, complete short quote, and a prominent manual-review warning only for medium/low-confidence evidence.
 - Make every evidence citation in the main view link to its Evidence Ledger card.
 - Use a clean research-review layout without gradients, animation, decorative illustrations, or external assets.

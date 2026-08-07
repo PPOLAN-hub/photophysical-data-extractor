@@ -30,6 +30,10 @@ def main(path_text: str) -> int:
     for evidence_id, e in ledger.items():
         if not evidence_id or e.get("type") not in VALID_TYPES:
             problems.append(f"invalid evidence type/id: {evidence_id}")
+        if e.get("confidence") not in {"high", "medium", "low"}:
+            problems.append(f"{evidence_id}: confidence must be high, medium, or low")
+        if e.get("confidence") in {"medium", "low"} and not str(e.get("manual_check_note") or "").strip():
+            problems.append(f"{evidence_id}: medium/low confidence needs manual_check_note")
         if e.get("type") == "figure_estimate" and e.get("confidence") == "high":
             problems.append(f"{evidence_id}: figure estimate cannot be high confidence")
         if e.get("type") == "figure_estimate" and "图中估读" not in e.get("manual_check_note", ""):

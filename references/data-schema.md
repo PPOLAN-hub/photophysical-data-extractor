@@ -37,4 +37,4 @@ Every entry in `identity`, `conditions`, and `fields` uses this shape:
 
 `measurement_context` is optional and records conditions specific to one field when they differ from the sample-level conditions. Use `status: not_reported` or `status: uncertain` with `raw_value: null` when appropriate. Field names include `emission_assignment`, `afterglow_color`, `afterglow_visible_time`, `phi_pl`, `lambda_f`, `tau_f`, `phi_f`, `lambda_df`, `tau_df`, `phi_df`, `lambda_p`, `tau_p`, `phi_p`, `k_isc`, `k_risc`, `k_rp`, and `knr_p`.
 
-Each evidence entry has `evidence_id`, `row_id`, `field_name`, `extracted_value`, `location`, `quote`, `type`, `confidence`, and `manual_check_note`. Confidence is `high`, `medium`, or `low`.
+Each evidence entry has `evidence_id`, `row_id`, `field_name`, `extracted_value`, `location`, `quote`, `type`, `confidence`, and `manual_check_note`. Confidence is `high`, `medium`, or `low`. Keep `manual_check_note` empty for ordinary high-confidence evidence; require a concise review instruction for medium/low-confidence evidence. High-confidence table quotes may contain only the table/cell cue because `location` carries the resolvable source.
