@@ -8,6 +8,19 @@ VALID_TYPES = {"direct_text", "table_value", "figure_estimate", "calculated_from
 VALID_STATUS = {"reported", "not_reported", "uncertain"}
 
 
+def validate_analysis_item(label, item, ledger, problems):
+    if not isinstance(item, dict) or not str(item.get("text", "")).strip():
+        problems.append(f"{label}: needs non-empty text")
+        return
+    evidence_ids = item.get("evidence_ids")
+    if not isinstance(evidence_ids, list) or not evidence_ids:
+        problems.append(f"{label}: needs evidence_ids")
+        return
+    for evidence_id in evidence_ids:
+        if evidence_id not in ledger:
+            problems.append(f"{label}: unknown evidence_id {evidence_id}")
+
+
 def main(path_text: str) -> int:
     data = json.loads(Path(path_text).read_text(encoding="utf-8"))
     problems = []
@@ -42,6 +55,20 @@ def main(path_text: str) -> int:
                     field_name = evidence.get("field_name", "").lower()
                     if "phosphor" not in quote and "rtp" not in quote and "tau_p" not in field_name and "τp" not in quote:
                         problems.append(f"{row_id}.tau_p: evidence must explicitly identify phosphorescence/RTP or tau_p")
+    analysis = data.get("article_analysis")
+    if analysis is not None:
+        if not isinstance(analysis, dict):
+            problems.append("article_analysis: must be an object")
+        else:
+            for key, item in analysis.get("koi", {}).items():
+                validate_analysis_item(f"article_analysis.koi.{key}", item, ledger, problems)
+            validate_analysis_item("article_analysis.one_sentence_innovation", analysis.get("one_sentence_innovation"), ledger, problems)
+            skeleton = analysis.get("logic_skeleton", [])
+            if not isinstance(skeleton, list) or not skeleton:
+                problems.append("article_analysis.logic_skeleton: needs at least one stage")
+            else:
+                for index, item in enumerate(skeleton, start=1):
+                    validate_analysis_item(f"article_analysis.logic_skeleton[{index}]", item, ledger, problems)
     if problems:
         print("INVALID")
         print("\n".join(problems))

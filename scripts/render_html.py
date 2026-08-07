@@ -4,7 +4,6 @@ import html
 import json
 import re
 import sys
-from collections import OrderedDict
 from pathlib import Path
 
 
@@ -40,6 +39,7 @@ FIELD_LABELS = {
 }
 
 PAPER_LABELS = {
+    "paper_id": "文献 ID",
     "title": "题目",
     "doi": "DOI",
     "journal_year": "期刊 / 年份",
@@ -196,34 +196,112 @@ def sample_panel(sample):
     )
 
 
-def compound_sections(samples):
-    grouped = OrderedDict()
+TABLE_COLUMNS = [
+    ("compound", "化合物", "identity"),
+    ("host_matrix", "Host/Matrix", "identity"),
+    ("doping_ratio", "掺杂比例", "identity"),
+    ("sample_state", "样品与条件", "condition_summary"),
+    ("emission_assignment", "发光归属", "fields"),
+    ("phi_pl", "Φ<sub>PL</sub>", "fields"),
+    ("lambda_f", "λ<sub>F</sub>", "fields"),
+    ("tau_f", "τ<sub>F</sub>", "fields"),
+    ("phi_f", "Φ<sub>F</sub>", "fields"),
+    ("lambda_df", "λ<sub>DF</sub>", "fields"),
+    ("tau_df", "τ<sub>DF</sub>", "fields"),
+    ("lambda_p", "λ<sub>P</sub>", "fields"),
+    ("tau_p", "τ<sub>P</sub>", "fields"),
+    ("phi_p", "Φ<sub>P</sub>", "fields"),
+    ("afterglow_visible_time", "可见余辉", "fields"),
+    ("k_isc", "k<sub>ISC</sub>", "fields"),
+    ("k_risc", "k<sub>RISC</sub>", "fields"),
+    ("k_rp", "k<sub>P</sub>/k<sub>r,P</sub>", "fields"),
+    ("knr_p", "k<sub>nr,P</sub>", "fields"),
+]
+
+
+def compact_field(field):
+    if not isinstance(field, dict) or field.get("status") != "reported":
+        return "<span class='table-empty'>—</span>"
+    return scientific_value(raw(field, "—")) + evidence_link(field.get("evidence_id"))
+
+
+def condition_summary(sample):
+    identity = sample.get("identity", {})
+    conditions = sample.get("conditions", {})
+    parts = []
+    state = identity.get("sample_state")
+    if isinstance(state, dict) and state.get("status") == "reported":
+        parts.append(compact_field(state))
+    for name in ("temperature", "atmosphere", "excitation", "delay", "gate_window"):
+        field = conditions.get(name)
+        if isinstance(field, dict) and field.get("status") == "reported":
+            parts.append(f"<span class='condition-line'><b>{field_label(name)}：</b>{compact_field(field)}</span>")
+    return "<br>".join(parts) if parts else "<span class='table-empty'>—</span>"
+
+
+def data_table(samples):
+    headers = "".join(f"<th>{label}</th>" for _, label, _ in TABLE_COLUMNS)
+    rows = []
     for sample in samples:
-        compound = raw(sample.get("identity", {}).get("compound"), "未命名化合物")
-        grouped.setdefault(compound, []).append(sample)
-    sections = []
-    for compound, records in grouped.items():
-        hosts = []
-        ratios = []
-        for record in records:
-            host = raw(record.get("identity", {}).get("host_matrix"), "")
-            ratio = raw(record.get("identity", {}).get("doping_ratio"), "")
-            if host and host not in hosts:
-                hosts.append(host)
-            if ratio and ratio not in ratios:
-                ratios.append(ratio)
-        row_ids = " ".join(f"<span class='row-chip'>{esc(item.get('row_id'))}</span>" for item in records)
-        meta = " · ".join(part for part in (" / ".join(hosts), " / ".join(ratios)) if part)
-        sections.append(
-            "<section class='compound-card'>"
-            "<header class='compound-head'>"
-            f"<div><h3>{esc(compound)}</h3><p>{esc(meta)}</p></div>"
-            f"<div class='row-chips'>{row_ids}</div>"
-            "</header>"
-            f"<div class='condition-grid'>{''.join(sample_panel(item) for item in records)}</div>"
-            "</section>"
+        identity = sample.get("identity", {})
+        fields = sample.get("fields", {})
+        cells = []
+        for name, _, group in TABLE_COLUMNS:
+            if group == "identity":
+                value = compact_field(identity.get(name))
+            elif group == "condition_summary":
+                value = condition_summary(sample)
+            else:
+                value = compact_field(fields.get(name))
+            cell_class = "compound-cell" if name == "compound" else ""
+            cells.append(f"<td class='{cell_class}'>{value}</td>")
+        rows.append(f"<tr><th class='row-key'>{esc(sample.get('row_id'))}</th>{''.join(cells)}</tr>")
+    return (
+        "<div class='data-table-wrap'><table class='data-table'>"
+        f"<thead><tr><th>Row ID</th>{headers}</tr></thead>"
+        f"<tbody>{''.join(rows)}</tbody></table></div>"
+    )
+
+
+def analysis_text(item):
+    if isinstance(item, str):
+        return esc(item)
+    if not isinstance(item, dict):
+        return "未提供"
+    links = "".join(evidence_link(eid) for eid in item.get("evidence_ids", []))
+    return scientific_value(item.get("text", "未提供")) + links
+
+
+def article_analysis_panel(analysis):
+    if not isinstance(analysis, dict) or not analysis:
+        return "<div class='analysis-missing'>尚未抽取文章级 KOI、创新点与逻辑骨架。</div>"
+    koi_labels = {
+        "research_problem": "研究问题",
+        "knowledge_gap": "关键缺口",
+        "design_strategy": "设计策略",
+        "mechanism": "作用机制",
+        "key_result": "关键结果",
+        "application": "应用落点",
+        "boundary": "边界与限制",
+    }
+    koi = analysis.get("koi", {})
+    koi_html = "".join(
+        f"<div class='koi-item'><dt>{esc(koi_labels.get(key, key))}</dt><dd>{analysis_text(value)}</dd></div>"
+        for key, value in koi.items()
+    )
+    innovation = analysis_text(analysis.get("one_sentence_innovation"))
+    stages = []
+    for index, stage in enumerate(analysis.get("logic_skeleton", []), start=1):
+        label = stage.get("stage", f"步骤 {index}") if isinstance(stage, dict) else f"步骤 {index}"
+        stages.append(
+            f"<li><span>{index}</span><div><b>{esc(label)}</b><p>{analysis_text(stage)}</p></div></li>"
         )
-    return "".join(sections), len(grouped)
+    logic_html = "".join(stages) or "<li class='analysis-missing'>未提供逻辑骨架</li>"
+    return (
+        f"<div class='innovation'><b>一句话创新点</b><p>{innovation}</p></div>"
+        f"<dl class='koi-grid'>{koi_html}</dl>"
+        f"<ol class='logic-chain'>{logic_html}</ol>"
+    )
 
 
 def confidence_badge(value):
@@ -282,7 +360,9 @@ def main(source_text: str, output_text: str) -> None:
     samples = data.get("samples", [])
     ledger = data.get("evidence_ledger", [])
     paper = data.get("paper", {})
-    compounds_html, compound_count = compound_sections(samples)
+    table_html = data_table(samples)
+    compound_count = len({raw(item.get("identity", {}).get("compound"), "") for item in samples})
+    analysis = data.get("article_analysis", {})
     review_items = data.get("manual_review", [])
     review_html = "".join(f"<li>{esc(item)}</li>" for item in review_items) or "<li>未列出需人工复核项目</li>"
     title = paper.get("title") or "纯有机长寿命发光证据化抽取报告"
@@ -315,21 +395,26 @@ h1{{max-width:1100px;margin:0;font-size:clamp(25px,3vw,38px);line-height:1.25}}
 .paper-grid{{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0 24px;background:#fff;border:1px solid var(--line);border-radius:10px;padding:14px 20px}}
 .paper-item{{display:grid;grid-template-columns:125px 1fr;gap:12px;padding:10px 0;border-bottom:1px solid #edf0f4}}
 .paper-item dt{{font-weight:700;color:#475569}}.paper-item dd{{margin:0}}
-.compound-card{{background:#fff;border:1px solid var(--line);border-radius:12px;margin-bottom:16px;overflow:hidden;box-shadow:0 4px 14px rgba(24,34,53,.035)}}
-.compound-head{{display:flex;justify-content:space-between;align-items:center;gap:20px;padding:17px 20px;border-bottom:1px solid var(--line);background:#fbfcfe}}
-.compound-head h3{{margin:0;font-size:21px}}.compound-head p{{margin:2px 0 0;color:var(--muted)}}
-.row-chips{{display:flex;flex-wrap:wrap;gap:5px;justify-content:flex-end}}
-.condition-grid{{display:grid;grid-template-columns:repeat(auto-fit,minmax(330px,1fr));gap:14px;padding:16px}}
-.condition-card{{border:1px solid var(--line);border-radius:9px;overflow:hidden;background:#fff}}
-.condition-head{{padding:12px 14px;background:var(--soft);border-bottom:1px solid var(--line)}}
-.condition-head h4{{display:inline;margin:0 0 0 7px;font-size:16px}}.condition-head p{{margin:2px 0 0;color:var(--muted)}}
-.row-id{{display:inline-block;color:var(--blue);font:700 11px/1.2 ui-monospace,SFMono-Regular,Consolas,monospace}}
-.condition-details{{display:flex;flex-wrap:wrap;gap:7px 14px;padding:11px 14px;border-bottom:1px solid #edf0f4;color:#475569;font-size:12px}}
-.metric-grid{{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;padding:12px}}
-.metric{{min-width:0;border:1px solid #e2e8f0;border-radius:7px;padding:9px 10px;background:#fff}}
-.metric-label{{color:#526070;font-weight:700;font-size:12px}}
-.metric-value{{margin-top:2px;font-size:14px;font-weight:650;overflow-wrap:anywhere}}
-.metric-context{{margin-top:5px;color:var(--muted);font-size:11px;line-height:1.4}}
+.innovation{{background:#fff;border:1px solid var(--line);border-left:5px solid var(--blue);border-radius:10px;padding:16px 20px;margin-bottom:12px}}
+.innovation>b{{color:var(--blue);font-size:13px}}.innovation p{{margin:5px 0 0;font-size:16px;font-weight:650}}
+.koi-grid{{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:1px;background:var(--line);border:1px solid var(--line);border-radius:10px;overflow:hidden;margin:0}}
+.koi-item{{background:#fff;padding:13px 16px}}.koi-item dt{{color:#526070;font-weight:750;font-size:12px}}.koi-item dd{{margin:3px 0 0}}
+.logic-chain{{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px;list-style:none;padding:0;margin:12px 0 0}}
+.logic-chain li{{display:flex;gap:10px;background:#fff;border:1px solid var(--line);border-radius:9px;padding:12px}}
+.logic-chain li>span{{display:grid;place-items:center;flex:0 0 25px;height:25px;border-radius:50%;background:var(--blue);color:#fff;font-weight:750}}
+.logic-chain b{{font-size:13px}}.logic-chain p{{margin:3px 0 0;color:#435168;font-size:12px}}
+.analysis-missing{{background:#fff;border:1px dashed var(--line);padding:16px;color:var(--muted)}}
+.data-table-wrap{{overflow:auto;background:#fff;border:1px solid #bdc8d6;border-radius:8px;box-shadow:0 4px 14px rgba(24,34,53,.035)}}
+.data-table{{border-collapse:separate;border-spacing:0;min-width:2200px;width:100%;font-size:12px;line-height:1.45}}
+.data-table th,.data-table td{{padding:10px 9px;border-right:1px solid #d6dee8;border-bottom:1px solid #d6dee8;text-align:center;vertical-align:middle;min-width:88px;max-width:230px;overflow-wrap:anywhere}}
+.data-table thead th{{position:sticky;top:0;z-index:3;background:#edf3fa;color:#233a57;font-weight:800;white-space:nowrap}}
+.data-table tr:last-child>*{{border-bottom:0}}.data-table tr>*:last-child{{border-right:0}}
+.data-table tbody tr:nth-child(even) td,.data-table tbody tr:nth-child(even) th{{background:#fafbfd}}
+.data-table tbody tr:hover td,.data-table tbody tr:hover th{{background:#f1f7ff}}
+.data-table .row-key{{position:sticky;left:0;z-index:2;min-width:68px;background:#fff;color:var(--blue);font:750 11px ui-monospace,SFMono-Regular,Consolas,monospace}}
+.data-table .compound-cell{{position:sticky;left:68px;z-index:1;min-width:110px;background:#fff;font-size:14px;font-weight:800;color:#172b4d}}
+.data-table thead th:first-child{{left:0;z-index:5}}.data-table thead th:nth-child(2){{position:sticky;left:68px;z-index:4}}
+.condition-line{{display:block;margin-top:4px;color:#526070}}.table-empty{{color:#a4adba}}
 .evidence-link{{font-size:10px;text-decoration:none;font-weight:700;white-space:nowrap}}
 .sample-note{{margin:0;padding:10px 14px;border-top:1px solid #edf0f4;background:#fffdf7;color:#675c3c;font-size:12px}}
 .status{{display:inline-block;border-radius:4px;padding:1px 5px;font-size:11px;font-weight:650}}.not_reported,.muted{{background:#eef1f4;color:#687385}}.uncertain{{background:var(--amber-soft);color:var(--amber)}}
@@ -352,8 +437,8 @@ blockquote span{{display:block;margin-bottom:2px;color:var(--blue);font-size:11p
 .review li{{margin:6px 0}}
 .empty{{color:var(--muted)}}
 sub{{font-size:.72em;line-height:0}}
-@media(max-width:820px){{.page{{width:min(100% - 18px,1440px)}}.summary{{grid-template-columns:repeat(2,1fr)}}.paper-grid{{grid-template-columns:1fr}}.compound-head{{align-items:flex-start;flex-direction:column}}.row-chips{{justify-content:flex-start}}.metric-grid{{grid-template-columns:repeat(2,minmax(0,1fr))}}}}
-@media print{{body{{background:#fff}}.page{{width:100%;margin:0}}.hero,.compound-card,.summary-card{{box-shadow:none}}details.ledger{{break-before:page}}}}
+@media(max-width:820px){{.page{{width:min(100% - 18px,1440px)}}.summary{{grid-template-columns:repeat(2,1fr)}}.paper-grid,.koi-grid{{grid-template-columns:1fr}}}}
+@media print{{body{{background:#fff}}.page{{width:100%;margin:0}}.hero,.summary-card{{box-shadow:none}}details.ledger{{break-before:page}}}}
 </style>
 </head>
 <body>
@@ -374,8 +459,12 @@ sub{{font-size:.72em;line-height:0}}
     <dl class="paper-grid">{paper_information(paper)}</dl>
   </section>
   <section class="section">
+    <div class="section-title"><h2>文章 KOI 与逻辑骨架</h2><p>文章级结论只展示一次，并保留证据链接</p></div>
+    {article_analysis_panel(analysis)}
+  </section>
+  <section class="section">
     <div class="section-title"><h2>主数据表</h2><p>按化合物归组；不同温度、气氛与发光机制保留为独立条件</p></div>
-    {compounds_html}
+    {table_html}
   </section>
   <section class="section">
     <div class="section-title"><h2>证据台账</h2><p>点击参数后的证据编号可跳转至对应原文短引</p></div>
