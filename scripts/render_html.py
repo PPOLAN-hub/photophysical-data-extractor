@@ -82,8 +82,16 @@ def raw(field, fallback="未报告"):
 def scientific_value(value):
     text = esc(value)
     substitutions = [
-        (r"tau_p", "τ<sub>P</sub>"),
-        (r"lambda_p", "λ<sub>P</sub>"),
+        (r"\bphi_?pl\b", "Φ<sub>PL</sub>"),
+        (r"\bphi_?df\b", "Φ<sub>DF</sub>"),
+        (r"\bphi_?f\b", "Φ<sub>F</sub>"),
+        (r"\bphi_?p\b", "Φ<sub>P</sub>"),
+        (r"\bΦ_?PL\b", "Φ<sub>PL</sub>"),
+        (r"\bΦ_?DF\b", "Φ<sub>DF</sub>"),
+        (r"\bΦ_?F\b", "Φ<sub>F</sub>"),
+        (r"\bΦ_?P\b", "Φ<sub>P</sub>"),
+        (r"\btau_?p\b", "τ<sub>P</sub>"),
+        (r"\blambda_?p\b", "λ<sub>P</sub>"),
         (r"tau_longest", "τ<sub>longest</sub>"),
         (r"tauavg", "τ<sub>avg</sub>"),
         (r"tau([123])", r"τ<sub>\1</sub>"),
@@ -657,7 +665,7 @@ def main(source_text: str, output_text: str) -> None:
     table_html = data_table(samples, analysis)
     compound_count = len({raw(item.get("identity", {}).get("compound"), "") for item in samples})
     review_items = data.get("manual_review", [])
-    review_html = "".join(f"<li>{esc(item)}</li>" for item in review_items) or "<li>未列出需人工复核项目</li>"
+    review_html = "".join(f"<li>{scientific_value(item)}</li>" for item in review_items) or "<li>未列出需人工复核项目</li>"
     title = paper.get("title") or "纯有机长寿命发光证据化抽取报告"
     doc = f"""<!DOCTYPE html>
 <html lang="zh-CN">
