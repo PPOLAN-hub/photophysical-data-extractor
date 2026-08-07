@@ -1,11 +1,13 @@
 ---
 name: photophysical-data-extractor
-description: Extract evidence-traceable photophysical data, article KOI, innovation, and logical structure from one or a batch of organic-material paper PDFs and their Supporting Information, then produce validated JSON and HTML review reports. Use for fluorescence, phosphorescence, RTP, afterglow, delayed fluorescence, TADF, persistent luminescence, PLQY, lifetime, spectra, host-matrix, rate constants, main/SI pairing, and batch literature organization where every value or synthesized claim must link to source evidence.
+description: Extract evidence-traceable photophysical data, article KOI, innovation, and logical structure from organic-material paper PDFs and their Supporting Information, then automatically produce validated JSON and HTML review reports. Invoke for one paper whenever the user says "PDE" and for multiple papers whenever the user says "PDFmore". Also use for fluorescence, phosphorescence, RTP, afterglow, delayed fluorescence, TADF, persistent luminescence, PLQY, lifetime, spectra, host-matrix, rate constants, deterministic main-SI pairing, and batch literature organization where every value or synthesized claim must link to source evidence.
 ---
 
 # Photophysical Data Extractor
 
 Extract evidence, not plausible values. Accept one organic photophysical paper PDF and optional SI, or a deterministically paired batch; write canonical JSON and render HTML audit reports. Cover prompt fluorescence as well as long-lived emission while keeping every mechanism and measurement condition distinct.
+
+Treat `PDE` as the single-paper invocation keyword. A single-paper upload may contain a main PDF plus one SI PDF with arbitrary filenames; treat them as one article set, distinguish main and SI from their document contents, and do not ask the user to rename or pair them. Treat `PDFmore` as the multi-paper invocation keyword and apply the deterministic batch naming rules below. Once invoked, complete extraction, JSON validation, and HTML rendering autonomously. Never ask the user to run validator or renderer commands.
 
 ## Required deliverables
 
@@ -34,7 +36,7 @@ Use the bundled `report_config.json` as the default main-table physical-column c
 
 ## Batch workflow
 
-1. Require `_main.pdf` and `_SI.pdf` suffixes sharing the exact same paper ID, or the folder-per-paper form in `references/batch-input.md`.
+1. Require either `P01.pdf` with `S01.pdf` (recommended) or `1main.pdf` with `1SI.pdf`. Match the complete digit string and naming scheme exactly; never pair by title or upload order. Read `references/batch-input.md`.
 2. Run `scripts/build_batch_manifest.py INPUT_DIR batch_manifest.json`; stop on pairing errors.
 3. Process each manifest entry independently. Never carry values, evidence IDs, or SI content from one paper into another.
 4. Write each result under `outputs/<paper_id>/`. Keep Row IDs local; use `<paper_id>:<row_id>` as the global row key when consolidating.

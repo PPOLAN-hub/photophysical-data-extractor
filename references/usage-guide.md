@@ -26,117 +26,61 @@ python -m pip install pypdf PyMuPDF PyYAML
 
 ### 安装 Skill
 
-Codex 用户可将仓库放入：
-
-```text
-%CODEX_HOME%/skills/photophysical-data-extractor/
-```
-
-Deep Code/兼容 Agent Skills 的工具可放入用户级目录：
-
-```text
-~/.agents/skills/photophysical-data-extractor/
-```
-
-或项目级目录：
-
-```text
-.deepcode/skills/photophysical-data-extractor/
-```
-
-安装后应保留完整的 `SKILL.md`、`scripts/`、`references/` 和 `report_config.json`。
-
-## 3. 单篇文献使用方法
-
-准备正文 PDF 和 SI PDF，然后向 Agent 发出类似指令：
-
-```text
-使用 photophysical-data-extractor 抽取这篇有机材料光物理论文及其 SI。
-要求生成 paper_data.json 和 report.html，并在渲染前通过校验。
-```
-
-Agent 应依次：
-
-1. 核对正文和 SI 是否齐全；
-2. 搜索 RTP、TADF、寿命、量子效率、77 K、基质、掺杂比例等候选位置；
-3. 按“化合物＋样品＋测试条件”建立独立记录；
-4. 为报告值关联证据编号；
-5. 生成 KOI、逻辑骨架和一句话创新点；
-6. 写入 `paper_data.json`；
-7. 校验 JSON；
-8. 使用渲染脚本生成 HTML。
-
-手动执行最后两步时，在 Skill 根目录运行：
+不要要求用户手动克隆私人仓库。使用 skills CLI 安装：
 
 ```powershell
-python scripts/validate_extraction.py "路径/paper_data.json"
-python scripts/render_html.py "路径/paper_data.json" "路径/report.html"
+npx skills add PPOLAN-hub/photophysical-data-extractor --skill photophysical-data-extractor --agent codex
 ```
 
-校验失败时不要直接制作 HTML，应先修正 JSON 中缺失的证据编号、非法状态或结构错误。
-
-## 4. 批量文献使用方法
-
-### 推荐命名
-
-正文和 SI 使用完全相同的文献 ID：
-
-```text
-P001_Liu_2024_main.pdf
-P001_Liu_2024_SI.pdf
-P002_Zhang_2025_main.pdf
-P002_Zhang_2025_SI.pdf
-```
-
-也可使用每篇文章一个文件夹：
-
-```text
-P001_Liu_2024/main.pdf
-P001_Liu_2024/SI.pdf
-```
-
-不要依赖文件顺序或模糊标题自动配对。不要使用含义不明确的 `1.pdf`、`1SI.pdf`；至少写成 `001_main.pdf`、`001_SI.pdf`。
-
-### 构建配对清单
+其他 Agent 可将 `codex` 替换为对应标识，例如：
 
 ```powershell
-python scripts/build_batch_manifest.py "输入文件夹" "batch_manifest.json"
+npx skills add PPOLAN-hub/photophysical-data-extractor --skill photophysical-data-extractor --agent claude-code
+npx skills add PPOLAN-hub/photophysical-data-extractor --skill photophysical-data-extractor --agent kimi-cli
 ```
 
-发生正文重复、SI 重复、SI 无正文或角色不明确时，脚本会停止。正文没有 SI 可以继续，但输出必须标记 SI 缺失。
+私人仓库要求当前 GitHub 账号已经获得访问权限。不要把 Personal Access Token 写入命令、提示词或聊天记录。
 
-### 推荐输出结构
+Cherry Studio 1.9.12 或更新版本使用界面安装：先从有权限的 GitHub 页面下载 ZIP，再进入 `设置 → 技能 → 从 ZIP 文件安装`，最后在目标 Agent 的技能设置中启用本 Skill。
+
+## 3. 用户调用方式
+
+单篇论文可直接上传正文与 SI 两份文件，不要求重命名或由用户手工配对。只需输入：
 
 ```text
-outputs/
-  P001_Liu_2024/
-    paper_data.json
-    report.html
-  P002_Zhang_2025/
-    paper_data.json
-    report.html
-  batch_report.json
-  batch_report.html
+PDE
 ```
 
-逐篇完成并校验后，建立：
+也可附加关注点：
 
-```json
-{
-  "paper_data_files": [
-    "P001_Liu_2024/paper_data.json",
-    "P002_Zhang_2025/paper_data.json"
-  ]
-}
+```text
+PDE，重点核对 77 K 数据和 SI 中的寿命表格。
 ```
 
-然后运行：
+Agent 必须自动识别正文与 SI，并完成抽取、JSON 校验和 HTML 渲染，不得要求用户手工运行校验器或渲染器。
 
-```powershell
-python scripts/render_html.py "outputs/batch_report.json" "outputs/batch_report.html"
+多篇论文按批量命名规则准备后，输入：
+
+```text
+PDFmore
 ```
 
-批量报告中，文章信息默认展开；每篇文章的主数据默认折叠；证据台账与人工复核为第二级折叠。证据编号会自动按文章隔离。
+多篇模式不得按标题或上传顺序猜测配对。
+
+## 4. 批量命名
+
+批量任务支持两种完整编号配对方式，推荐使用 `P01/S01`：
+
+```text
+P01.pdf  对应  S01.pdf
+P02.pdf  对应  S02.pdf
+P03.pdf  对应  S03.pdf
+
+1main.pdf  对应  1SI.pdf
+2main.pdf  对应  2SI.pdf
+```
+
+`P/main` 表示正文，`S/SI` 表示支持信息。数字必须完全一致，包括前导零；`P01.pdf` 不得与 `S1.pdf` 配对，同一对文件也不得混用两种命名方式。不要按上传顺序、标题或 PDF 元数据猜测。正文缺少 SI 可以继续并标记缺失；孤立 SI、重复正文或重复 SI 必须停止。
 
 ## 5. 修改物理量表头
 
@@ -232,11 +176,9 @@ python scripts/render_html.py "outputs/batch_report.json" "outputs/batch_report.
 
 ### 使用独立配置而不修改默认文件
 
-把自定义内容保存为 `my_report_config.json`，将其作为第三个参数传入：
+把自定义内容保存为 `my_report_config.json`：
 
-```powershell
-python scripts/render_html.py "paper_data.json" "report.html" "my_report_config.json"
-```
+将配置文件与论文一起交给 Agent，并输入 `PDE`。Agent 会按该配置自动重新生成报告。
 
 这样适合不同课题组、论文类型或项目分别维护自己的表头。配置文件不存在、字段不受支持、字段重复或样式格式错误时，渲染器会直接报错，不会静默生成错误表格。
 
@@ -258,11 +200,11 @@ python scripts/render_html.py "paper_data.json" "report.html" "my_report_config.
 
 ### HTML 修改后没有变化
 
-不要直接修改已有 `report.html`。修改 `report_config.json` 或渲染器后，重新运行 `scripts/render_html.py`。
+不要直接修改已有 `report.html`。修改 `report_config.json` 后，让 Agent 自动重新生成报告。
 
 ### 自定义配置没有生效
 
-确认配置文件是有效 JSON，并确认命令中第三个参数指向正确文件。若未提供第三个参数，渲染器只读取 Skill 根目录的默认 `report_config.json`。
+确认配置文件是有效 JSON，并在调用 `PDE` 时把该配置文件与论文一起交给 Agent。未提供自定义配置时，Agent 使用 Skill 根目录的默认 `report_config.json`。
 
 ### 表头字段存在但整列为空
 
@@ -284,5 +226,5 @@ JSON 中可以有多个条件记录，但 HTML 应按化合物合并为一行。
 - 掺杂比例没有被删除；
 - 主表的红色、蓝色和最佳值样式符合规则；
 - 低置信度与冲突项进入人工复核；
-- `validate_extraction.py` 返回成功；
+- Agent 已完成 JSON 校验；
 - 报告由当前 JSON 重新渲染，而非手工修改旧 HTML。

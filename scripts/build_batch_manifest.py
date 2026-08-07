@@ -7,7 +7,10 @@ import sys
 from pathlib import Path
 
 
-FLAT_PATTERN = re.compile(r"^(?P<key>.+)_(?P<role>main|si)\.pdf$", re.IGNORECASE)
+PAIR_PATTERNS = (
+    ("ps-prefix", re.compile(r"^(?P<role>[ps])(?P<index>\d+)\.pdf$", re.IGNORECASE)),
+    ("main-si-suffix", re.compile(r"^(?P<index>\d+)(?P<role>main|si)\.pdf$", re.IGNORECASE)),
+)
 
 
 def digest(path):
@@ -22,10 +25,17 @@ def relative(path, root):
     return path.relative_to(root).as_posix()
 
 
-def add_role(groups, key, role, path, problems):
-    record = groups.setdefault(key, {})
+def add_role(groups, index, scheme, role, path, problems):
+    paper_id = f"P{index}"
+    record = groups.setdefault(index, {"_scheme": scheme, "_paper_id": paper_id})
+    if record["_scheme"] != scheme:
+        problems.append(
+            f"{paper_id}: mixed naming schemes are not allowed: "
+            f"{record['_scheme']} | {scheme}"
+        )
+        return
     if role in record:
-        problems.append(f"{key}: duplicate {role} PDFs: {record[role]} | {path}")
+        problems.append(f"{paper_id}: duplicate {role} PDFs: {record[role]} | {path}")
     else:
         record[role] = path
 
@@ -35,25 +45,29 @@ def build(root):
     problems = []
     ignored = []
     for path in sorted(root.rglob("*.pdf"), key=lambda item: str(item).lower()):
-        match = FLAT_PATTERN.match(path.name)
-        if match:
-            add_role(groups, match.group("key"), match.group("role").lower(), path, problems)
-            continue
-        if path.name.lower() in {"main.pdf", "si.pdf"} and path.parent != root:
-            add_role(groups, path.parent.name, path.stem.lower(), path, problems)
-            continue
-        ignored.append(relative(path, root))
+        for scheme, pattern in PAIR_PATTERNS:
+            match = pattern.match(path.name)
+            if match:
+                index = match.group("index")
+                raw_role = match.group("role").lower()
+                role = "main" if raw_role in {"p", "main"} else "si"
+                add_role(groups, index, scheme, role, path, problems)
+                break
+        else:
+            ignored.append(relative(path, root))
 
     papers = []
-    for key in sorted(groups, key=str.lower):
-        record = groups[key]
+    for index in sorted(groups, key=str.lower):
+        record = groups[index]
+        paper_id = record["_paper_id"]
         if "main" not in record:
-            problems.append(f"{key}: SI exists without main PDF")
+            problems.append(f"{paper_id}: SI exists without main PDF")
             continue
         main_path = record["main"]
         si_path = record.get("si")
         papers.append({
-            "paper_id": key,
+            "paper_id": paper_id,
+            "naming_scheme": record["_scheme"],
             "main_pdf": relative(main_path, root),
             "main_sha256": digest(main_path),
             "si_pdf": relative(si_path, root) if si_path else None,

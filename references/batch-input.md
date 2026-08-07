@@ -2,28 +2,22 @@
 
 Use deterministic names. Never pair a main paper and SI by folder order, upload order, title similarity alone, or PDF metadata alone.
 
-## Preferred flat-folder naming
+## Required flat-folder naming
 
-Use the same paper ID followed by an explicit suffix:
-
-```text
-P001_Liu_2024_main.pdf
-P001_Liu_2024_SI.pdf
-P002_Zhang_2025_main.pdf
-P002_Zhang_2025_SI.pdf
-```
-
-The exact text before `_main.pdf` or `_SI.pdf` is the pairing key. IDs such as `1.pdf` and `1SI.pdf` are not accepted in strict mode because the role boundary is ambiguous. A simple numeric scheme is acceptable when written as `001_main.pdf` and `001_SI.pdf`.
-
-## Folder-per-paper alternative
-
-Use this when a paper has several supplementary files:
+Use either of these two naming schemes. The `P/S` prefix scheme is recommended because the roles are immediately visible and zero padding keeps file sorting stable:
 
 ```text
-P001_Liu_2024/main.pdf
-P001_Liu_2024/SI.pdf
-P001_Liu_2024/extra-data.xlsx
+# Recommended
+P01.pdf  <->  S01.pdf
+P02.pdf  <->  S02.pdf
+P03.pdf  <->  S03.pdf
+
+# Compatible alternative
+1main.pdf  <->  1SI.pdf
+2main.pdf  <->  2SI.pdf
 ```
+
+The digits are the pairing key and must match exactly, including zero padding. For example, `P01.pdf` does not pair with `S1.pdf`. Both files in a pair must use the same naming scheme. Do not use titles, upload order, PDF metadata, or folder names as pairing rules.
 
 ## Batch workflow
 
@@ -42,12 +36,12 @@ After validating every per-paper JSON, create an index beside the batch outputs:
 ```json
 {
   "paper_data_files": [
-    "outputs/P001_Liu_2024/paper_data.json",
-    "outputs/P002_Zhang_2025/paper_data.json"
+    "outputs/P01/paper_data.json",
+    "outputs/P02/paper_data.json"
   ]
 }
 ```
 
-Run `scripts/render_html.py batch_report.json batch_report.html`. The renderer also accepts a JSON array of canonical paper objects or `{"papers": [...]}`. In a consolidated report, keep each article-information table open and keep that article's combined main-data/evidence-review region closed by default. Evidence anchors are automatically namespaced by paper and cannot collide across articles.
+The Agent renders `batch_report.html` automatically. The renderer also accepts a JSON array of canonical paper objects or `{"papers": [...]}`. In a consolidated report, keep each article-information table open and keep that article's combined main-data/evidence-review region closed by default. Evidence anchors are automatically namespaced by paper and cannot collide across articles.
 
 The manifest stores SHA-256 hashes so later runs can detect replacement or accidental cross-pairing.
