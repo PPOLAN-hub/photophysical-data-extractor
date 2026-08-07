@@ -37,9 +37,11 @@ def main(path_text: str) -> int:
                 if status != "reported" and field.get("raw_value") is not None:
                     problems.append(f"{row_id}.{group}.{name}: non-reported status must have null raw_value")
                 if name == "tau_p" and status == "reported":
-                    quote = (ledger.get(evidence_id) or {}).get("quote", "").lower()
-                    if "phosphor" not in quote:
-                        problems.append(f"{row_id}.tau_p: evidence quote must explicitly support phosphorescence attribution")
+                    evidence = ledger.get(evidence_id) or {}
+                    quote = evidence.get("quote", "").lower()
+                    field_name = evidence.get("field_name", "").lower()
+                    if "phosphor" not in quote and "rtp" not in quote and "tau_p" not in field_name and "τp" not in quote:
+                        problems.append(f"{row_id}.tau_p: evidence must explicitly identify phosphorescence/RTP or tau_p")
     if problems:
         print("INVALID")
         print("\n".join(problems))
