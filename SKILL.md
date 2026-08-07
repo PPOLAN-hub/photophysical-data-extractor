@@ -16,7 +16,7 @@ Create these files beside the input paper:
 
 Run `scripts/validate_extraction.py paper_data.json` before rendering. Do not hand-edit `report.html`.
 
-Read `references/extraction-policy.md` and `references/data-schema.md` before extracting.
+Read `references/extraction-policy.md` and `references/data-schema.md` before extracting. Read `references/html-report-style.md` before rendering the HTML report.
 
 ## Workflow
 
