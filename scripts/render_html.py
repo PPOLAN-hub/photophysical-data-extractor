@@ -211,19 +211,19 @@ TABLE_COLUMNS = [
     ("host_matrix", "Host", "identity"),
     ("doping_ratio", "掺杂比例", "identity"),
     ("emission_assignment", "类型", "fields"),
-    ("phi_pl", "Φ<sub>PL</sub>", "fields"),
-    ("lambda_f", "λ<sub>F</sub>", "fields"),
-    ("tau_f", "τ<sub>F</sub>", "fields"),
-    ("phi_f", "Φ<sub>F</sub>", "fields"),
-    ("lambda_df", "λ<sub>DF</sub>", "fields"),
-    ("tau_df", "τ<sub>DF</sub>", "fields"),
-    ("lambda_p", "λ<sub>P</sub>", "fields"),
-    ("tau_p", "τ<sub>P</sub>", "fields"),
-    ("phi_p", "Φ<sub>P</sub>", "fields"),
-    ("k_isc", "k<sub>ISC</sub>", "fields"),
-    ("k_risc", "k<sub>RISC</sub>", "fields"),
-    ("k_rp", "k<sub>P</sub>/k<sub>r,P</sub>", "fields"),
-    ("knr_p", "k<sub>nr,P</sub>", "fields"),
+    ("phi_pl", "<i class='metric-symbol'>Φ</i><sub>PL</sub>", "fields"),
+    ("lambda_f", "<i class='metric-symbol'>λ</i><sub>F</sub>", "fields"),
+    ("tau_f", "<i class='metric-symbol'>τ</i><sub>F</sub>", "fields"),
+    ("phi_f", "<i class='metric-symbol'>Φ</i><sub>F</sub>", "fields"),
+    ("lambda_df", "<i class='metric-symbol'>λ</i><sub>DF</sub>", "fields"),
+    ("tau_df", "<i class='metric-symbol'>τ</i><sub>DF</sub>", "fields"),
+    ("lambda_p", "<i class='metric-symbol'>λ</i><sub>P</sub>", "fields"),
+    ("tau_p", "<i class='metric-symbol'>τ</i><sub>P</sub>", "fields"),
+    ("phi_p", "<i class='metric-symbol'>Φ</i><sub>P</sub>", "fields"),
+    ("k_isc", "<i class='metric-symbol'>k</i><sub>ISC</sub>", "fields"),
+    ("k_risc", "<i class='metric-symbol'>k</i><sub>RISC</sub>", "fields"),
+    ("k_rp", "<i class='metric-symbol'>k</i><sub>P</sub>/<i class='metric-symbol'>k</i><sub>r,P</sub>", "fields"),
+    ("knr_p", "<i class='metric-symbol'>k</i><sub>nr,P</sub>", "fields"),
 ]
 
 
@@ -525,13 +525,16 @@ def logic_rows(analysis, colspan):
     result = analysis_text(koi.get("key_result"))
     rows = []
     if logic:
-        rows.append(f"<tr class='paper-note-row'><td colspan='{colspan}'><b>逻辑骨架：</b>{esc(logic)}</td></tr>")
-    rows.append(f"<tr class='paper-note-row'><td colspan='{colspan}'><b>核心论点：</b>{mechanism}；{result}</td></tr>")
+        rows.append(f"<tr class='synthesis-row'><td colspan='{colspan}'><b>逻辑骨架：</b>{esc(logic)}</td></tr>")
+    rows.append(f"<tr class='synthesis-row'><td colspan='{colspan}'><b>核心论点：</b>{mechanism}；{result}</td></tr>")
     return "".join(rows)
 
 
 def data_table(samples, analysis):
-    headers = "".join(f"<th>{label}</th>" for _, label, _ in TABLE_COLUMNS)
+    headers = "".join(
+        f"<th class='{'metric-header' if group == 'fields' and name != 'emission_assignment' else ''}'>{label}</th>"
+        for name, label, group in TABLE_COLUMNS
+    )
     grouped = {}
     for sample in samples:
         compound = raw(sample.get("identity", {}).get("compound"), "未命名化合物")
@@ -569,8 +572,9 @@ def data_table(samples, analysis):
     return (
         "<div class='data-table-wrap'><table class='data-table'>"
         f"<thead><tr>{headers}</tr></thead>"
-        f"<tbody>{logic_rows(analysis, colspan)}{''.join(rows)}"
+        f"<tbody>{''.join(rows)}"
         f"<tr class='condition-footnotes'><td colspan='{colspan}'><b>条件脚注：</b>{footnotes}</td></tr>"
+        f"{logic_rows(analysis, colspan)}"
         f"<tr class='innovation-row'><td colspan='{colspan}'><b>创新点：</b>{innovation}</td></tr>"
         "</tbody></table></div>"
     )
@@ -835,7 +839,7 @@ a{{color:var(--blue)}}
 .page{{width:min(1440px,calc(100% - 32px));margin:24px auto 56px}}
 .paper-report{{margin:0 0 22px}}.paper-report+ .paper-report{{padding-top:22px;border-top:3px solid #aab9cc}}
 .article-info,.article-data{{background:#fff;border:1px solid var(--line);border-radius:9px;overflow:hidden}}
-.article-data{{margin-top:10px}}.article-info>summary,.article-data>summary{{cursor:pointer;padding:10px 14px;background:#edf3fa;color:#233a57;font-size:12px;font-weight:800}}
+.article-data{{margin-top:10px}}.article-info>summary,.article-data>summary{{cursor:pointer;padding:10px 14px;background:#edf3fa;color:#233a57;font-weight:800}}.article-info>summary{{font-size:15pt}}.article-data>summary{{font-size:12px}}
 .article-info[open]>summary,.article-data[open]>summary{{border-bottom:1px solid var(--line)}}
 .article-info-wrap{{overflow:auto}}.article-info-table{{width:100%;border-collapse:collapse;font-size:12px;line-height:1.45}}
 .article-info-table th,.article-info-table td{{padding:9px 10px;border-right:1px solid #d6dee8;border-bottom:1px solid #d6dee8;text-align:left;vertical-align:middle}}
@@ -873,14 +877,13 @@ h1{{max-width:1100px;margin:0;font-size:clamp(25px,3vw,38px);line-height:1.25}}
 .data-table{{border-collapse:separate;border-spacing:0;min-width:1680px;width:100%;font-size:12pt;line-height:1.45}}
 .data-table th,.data-table td{{padding:10px 9px;border-right:1px solid #d6dee8;border-bottom:1px solid #d6dee8;text-align:center;vertical-align:middle;min-width:88px;max-width:230px;overflow-wrap:anywhere}}
 .data-table thead th{{position:sticky;top:0;z-index:3;background:#edf3fa;color:#233a57;font-size:12pt;line-height:1.25;font-weight:800;white-space:nowrap}}
+.data-table thead th.metric-header{{font-size:14pt;font-weight:400}}.metric-header .metric-symbol{{font-style:italic;font-weight:400}}.metric-header sub{{font-style:normal;font-weight:400}}
 .data-table tr:last-child>*{{border-bottom:0}}.data-table tr>*:last-child{{border-right:0}}
 .data-table tbody tr:nth-child(even) td,.data-table tbody tr:nth-child(even) th{{background:#fafbfd}}
 .data-table tbody tr:hover td,.data-table tbody tr:hover th{{background:#f1f7ff}}
 .data-table .compound-cell{{position:sticky;left:0;z-index:2;min-width:130px;background:#fff;font-size:12pt;font-weight:800;color:#172b4d}}
 .data-table thead th:first-child{{left:0;z-index:5}}
-.paper-note-row td,.innovation-row td{{text-align:left;padding:13px 16px;white-space:normal;max-width:none;background:#fff}}
-.paper-note-row td{{color:#334155}}.paper-note-row b{{color:#172b4d}}
-.innovation-row td{{border-top:2px solid #9fb2c8;background:#fbfcfe;font-size:12pt}}.innovation-row b{{color:var(--blue)}}
+.synthesis-row td,.innovation-row td{{text-align:left;padding:13px 16px;white-space:normal;max-width:none;background:#fbfcfe;font-size:12pt;color:#334155}}.condition-footnotes+.synthesis-row td{{border-top:2px solid #9fb2c8}}.synthesis-row b,.innovation-row b{{color:var(--blue)}}
 .condition-ref{{margin-left:2px;color:#7a4d00;font-size:9px;font-weight:800}}.condition-values{{white-space:normal}}.value-citation{{display:inline-block;white-space:nowrap}}
 .doped-rt-phosphor{{color:#c5162e}}.doped-77k-phosphor{{color:#0000FF}}
 .best-lifetime{{font-weight:850;text-decoration:underline;text-underline-offset:2px}}
