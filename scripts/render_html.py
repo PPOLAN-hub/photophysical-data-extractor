@@ -364,7 +364,57 @@ def condition_marker(sample, registry, labels):
     return registry[description]
 
 
-def all_condition_field(records, group, name, registry, labels):
+def doped_matrix_temperature(sample):
+    identity = sample.get("identity", {})
+    state = raw(identity.get("sample_state"), "").lower()
+    host = identity.get("host_matrix")
+    ratio = identity.get("doping_ratio")
+    if "solution" in state or "溶液" in state:
+        return ""
+    if not isinstance(host, dict) or host.get("status") != "reported":
+        return ""
+    if not isinstance(ratio, dict) or ratio.get("status") != "reported":
+        return ""
+    temperature = raw(sample.get("conditions", {}).get("temperature"), "").lower()
+    if temperature == "rt" or "room temperature" in temperature or "室温" in temperature:
+        return "rt"
+    if re.search(r"\b77\s*k\b", temperature) or "77 k" in temperature:
+        return "77k"
+    return ""
+
+
+def comparison_value(name, field):
+    rendered = html.unescape(re.sub(r"<[^>]+>", "", table_raw(name, field)))
+    if name == "tau_p":
+        numbers = [float(item) for item in re.findall(r"[0-9.]+", rendered)]
+        units = re.findall(r"\b(ns|ms|s)\b", rendered, re.IGNORECASE)
+        if not numbers or not units:
+            return None
+        scale = {"ns": 1e-9, "ms": 1e-3, "s": 1.0}[units[-1].lower()]
+        return max(numbers) * scale
+    match = re.search(r"([0-9.]+)\s*(ns|ms|s|%)?", rendered, re.IGNORECASE)
+    if not match:
+        return None
+    value = float(match.group(1))
+    return value
+
+
+def rt_doped_maxima(samples):
+    maxima = {"tau_p": None, "phi_p": None}
+    for sample in samples:
+        if doped_matrix_temperature(sample) != "rt":
+            continue
+        for name in maxima:
+            field = sample.get("fields", {}).get(name)
+            if not isinstance(field, dict) or field.get("status") != "reported":
+                continue
+            value = comparison_value(name, field)
+            if value is not None and (maxima[name] is None or value > maxima[name]):
+                maxima[name] = value
+    return maxima
+
+
+def all_condition_field(records, group, name, registry, labels, maxima):
     entries = []
     seen = set()
     for sample in records:
@@ -377,9 +427,20 @@ def all_condition_field(records, group, name, registry, labels):
         if key in seen:
             continue
         seen.add(key)
-        host = raw(sample.get("identity", {}).get("host_matrix"), "").lower()
-        if name in {"lambda_p", "tau_p", "phi_p"} and "pmma" in host:
-            value = f"<span class='pmma-phosphor-highlight'>{value}</span>"
+        temperature_kind = doped_matrix_temperature(sample)
+        classes = []
+        numeric_value = comparison_value(name, field)
+        if name == "tau_p" and temperature_kind == "rt":
+            classes.append("doped-rt-lifetime")
+            if numeric_value is not None and maxima.get("tau_p") is not None and abs(numeric_value - maxima["tau_p"]) <= max(abs(maxima["tau_p"]) * 1e-9, 1e-12):
+                classes.append("best-lifetime")
+        elif name == "tau_p" and temperature_kind == "77k":
+            classes.append("doped-77k-lifetime")
+        elif name == "phi_p" and temperature_kind == "rt":
+            if numeric_value is not None and maxima.get("phi_p") is not None and abs(numeric_value - maxima["phi_p"]) <= max(abs(maxima["phi_p"]) * 1e-9, 1e-12):
+                classes.append("best-efficiency")
+        if classes:
+            value = f"<span class='{' '.join(classes)}'>{value}</span>"
         entries.append(value + evidence_link(field.get("evidence_id")) + f"<sup class='condition-ref'>[{marker}]</sup>")
     if not entries:
         return "<span class='table-empty'>—</span>"
@@ -449,6 +510,7 @@ def data_table(samples, analysis):
         grouped.setdefault(compound, []).append(sample)
     condition_registry = {}
     condition_labels = []
+    maxima = rt_doped_maxima(samples)
     rows = []
     for compound, records in grouped.items():
         cells = []
@@ -465,7 +527,7 @@ def data_table(samples, analysis):
             elif name in {"host_matrix", "doping_ratio"}:
                 value = formulation_field(records, name)
             else:
-                value = all_condition_field(records, group, name, condition_registry, condition_labels)
+                value = all_condition_field(records, group, name, condition_registry, condition_labels, maxima)
             cell_class = "compound-cell" if name == "compound" else ""
             cells.append(f"<td class='{cell_class}'>{value}</td>")
         record_ids = ", ".join(str(item.get("row_id")) for item in records)
@@ -640,7 +702,9 @@ h1{{max-width:1100px;margin:0;font-size:clamp(25px,3vw,38px);line-height:1.25}}
 .paper-note-row td{{color:#334155}}.paper-note-row b{{color:#172b4d}}
 .innovation-row td{{border-top:2px solid #9fb2c8;background:#fbfcfe;font-size:13px}}.innovation-row b{{color:var(--blue)}}
 .condition-ref{{margin-left:2px;color:#7a4d00;font-size:9px;font-weight:800}}.condition-values{{white-space:normal}}
-.pmma-phosphor-highlight{{color:#c5162e;font-weight:850}}
+.doped-rt-lifetime{{color:#c5162e}}.doped-77k-lifetime{{color:#245fc7}}
+.best-lifetime{{font-weight:850;text-decoration:underline;text-underline-offset:2px}}
+.best-efficiency{{font-weight:850}}
 .condition-footnotes td{{text-align:left;max-width:none;padding:12px 16px;background:#fffdf7;color:#5f5335;line-height:1.55}}
 .condition-footnotes div{{display:inline;margin-right:18px}}.condition-footnotes sup{{color:#7a4d00;font-weight:800}}
 .condition-line{{display:block;margin-top:4px;color:#526070}}.table-empty{{color:#a4adba}}
