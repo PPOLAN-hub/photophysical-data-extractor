@@ -225,6 +225,15 @@ def compact_field(field):
     return scientific_value(raw(field, "—")) + evidence_link(field.get("evidence_id"))
 
 
+def record_tag(sample):
+    row_id = str(sample.get("row_id") or "")
+    temperature = raw(sample.get("conditions", {}).get("temperature"), "")
+    assignment = raw(sample.get("fields", {}).get("emission_assignment"), "")
+    lower = assignment.lower()
+    mechanism = "TADF" if "tadf" in lower or "delayed fluorescence" in lower else "RTP" if "phosphor" in lower or "rtp" in lower else ""
+    return " · ".join(part for part in (row_id, temperature, mechanism) if part)
+
+
 def condition_summary(sample):
     identity = sample.get("identity", {})
     conditions = sample.get("conditions", {})
@@ -239,26 +248,64 @@ def condition_summary(sample):
     return "<br>".join(parts) if parts else "<span class='table-empty'>—</span>"
 
 
+def stacked_entry(sample, value):
+    return (
+        "<div class='stacked-entry'>"
+        f"<span class='condition-tag'>{esc(record_tag(sample))}</span>"
+        f"<div>{value}</div>"
+        "</div>"
+    )
+
+
+def aggregate_field(records, group, name, deduplicate=False):
+    entries = []
+    seen = set()
+    for sample in records:
+        field = sample.get(group, {}).get(name)
+        if not isinstance(field, dict) or field.get("status") != "reported":
+            continue
+        key = (str(field.get("raw_value")), str(field.get("raw_unit")))
+        if deduplicate and key in seen:
+            continue
+        seen.add(key)
+        entries.append((sample, compact_field(field)))
+    if not entries:
+        return "<span class='table-empty'>—</span>"
+    if len(entries) == 1:
+        return entries[0][1]
+    return "".join(stacked_entry(sample, value) for sample, value in entries)
+
+
 def data_table(samples):
     headers = "".join(f"<th>{label}</th>" for _, label, _ in TABLE_COLUMNS)
-    rows = []
+    grouped = {}
     for sample in samples:
-        identity = sample.get("identity", {})
-        fields = sample.get("fields", {})
+        compound = raw(sample.get("identity", {}).get("compound"), "未命名化合物")
+        grouped.setdefault(compound, []).append(sample)
+    rows = []
+    for compound, records in grouped.items():
         cells = []
         for name, _, group in TABLE_COLUMNS:
-            if group == "identity":
-                value = compact_field(identity.get(name))
+            if name == "compound":
+                compound_fields = [item.get("identity", {}).get("compound") for item in records]
+                evidence_ids = []
+                for field in compound_fields:
+                    if isinstance(field, dict) and field.get("evidence_id") not in evidence_ids:
+                        evidence_ids.append(field.get("evidence_id"))
+                value = esc(compound) + "".join(evidence_link(item) for item in evidence_ids if item)
+            elif group == "identity":
+                value = aggregate_field(records, "identity", name, deduplicate=True)
             elif group == "condition_summary":
-                value = condition_summary(sample)
+                value = "".join(stacked_entry(item, condition_summary(item)) for item in records)
             else:
-                value = compact_field(fields.get(name))
+                value = aggregate_field(records, "fields", name)
             cell_class = "compound-cell" if name == "compound" else ""
             cells.append(f"<td class='{cell_class}'>{value}</td>")
-        rows.append(f"<tr><th class='row-key'>{esc(sample.get('row_id'))}</th>{''.join(cells)}</tr>")
+        row_ids = "".join(f"<span class='record-chip'>{esc(item.get('row_id'))}</span>" for item in records)
+        rows.append(f"<tr><th class='row-key'>{row_ids}</th>{''.join(cells)}</tr>")
     return (
         "<div class='data-table-wrap'><table class='data-table'>"
-        f"<thead><tr><th>Row ID</th>{headers}</tr></thead>"
+        f"<thead><tr><th>记录 IDs</th>{headers}</tr></thead>"
         f"<tbody>{''.join(rows)}</tbody></table></div>"
     )
 
@@ -411,10 +458,13 @@ h1{{max-width:1100px;margin:0;font-size:clamp(25px,3vw,38px);line-height:1.25}}
 .data-table tr:last-child>*{{border-bottom:0}}.data-table tr>*:last-child{{border-right:0}}
 .data-table tbody tr:nth-child(even) td,.data-table tbody tr:nth-child(even) th{{background:#fafbfd}}
 .data-table tbody tr:hover td,.data-table tbody tr:hover th{{background:#f1f7ff}}
-.data-table .row-key{{position:sticky;left:0;z-index:2;min-width:68px;background:#fff;color:var(--blue);font:750 11px ui-monospace,SFMono-Regular,Consolas,monospace}}
-.data-table .compound-cell{{position:sticky;left:68px;z-index:1;min-width:110px;background:#fff;font-size:14px;font-weight:800;color:#172b4d}}
-.data-table thead th:first-child{{left:0;z-index:5}}.data-table thead th:nth-child(2){{position:sticky;left:68px;z-index:4}}
+.data-table .row-key{{position:sticky;left:0;z-index:2;min-width:84px;background:#fff;color:var(--blue);font:750 11px ui-monospace,SFMono-Regular,Consolas,monospace}}
+.data-table .compound-cell{{position:sticky;left:84px;z-index:1;min-width:118px;background:#fff;font-size:14px;font-weight:800;color:#172b4d}}
+.data-table thead th:first-child{{left:0;z-index:5}}.data-table thead th:nth-child(2){{position:sticky;left:84px;z-index:4}}
 .condition-line{{display:block;margin-top:4px;color:#526070}}.table-empty{{color:#a4adba}}
+.stacked-entry{{padding:7px 0;border-bottom:1px dashed #d8e0ea}}.stacked-entry:first-child{{padding-top:0}}.stacked-entry:last-child{{padding-bottom:0;border-bottom:0}}
+.condition-tag{{display:inline-block;margin-bottom:4px;padding:2px 6px;border-radius:999px;background:#e9f1fb;color:#2c5687;font-size:10px;font-weight:800;white-space:nowrap}}
+.record-chip{{display:block;margin:3px auto;padding:2px 5px;border-radius:4px;background:#edf4ff;width:max-content}}
 .evidence-link{{font-size:10px;text-decoration:none;font-weight:700;white-space:nowrap}}
 .sample-note{{margin:0;padding:10px 14px;border-top:1px solid #edf0f4;background:#fffdf7;color:#675c3c;font-size:12px}}
 .status{{display:inline-block;border-radius:4px;padding:1px 5px;font-size:11px;font-weight:650}}.not_reported,.muted{{background:#eef1f4;color:#687385}}.uncertain{{background:var(--amber-soft);color:var(--amber)}}
@@ -463,7 +513,7 @@ sub{{font-size:.72em;line-height:0}}
     {article_analysis_panel(analysis)}
   </section>
   <section class="section">
-    <div class="section-title"><h2>主数据表</h2><p>按化合物归组；不同温度、气氛与发光机制保留为独立条件</p></div>
+    <div class="section-title"><h2>主数据表</h2><p>每种化合物一行；不同温度、气氛与发光机制在单元格内分条标注</p></div>
     {table_html}
   </section>
   <section class="section">
