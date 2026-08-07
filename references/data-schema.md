@@ -2,9 +2,9 @@
 
 `paper_data.json` contains one object with `paper`, `samples`, `evidence_ledger`, `manual_review`, and `rate_calculations` keys.
 
-Each sample has `row_id`, an `identity` object, a `conditions` object, a `fields` object, and `notes`. Identity includes compound, host_matrix, doping_ratio, and sample_state. Conditions include atmosphere, temperature, excitation, delay, and gate_window.
+Each sample has `row_id`, an `identity` object, a `conditions` object, a `fields` object, and `notes`. Identity includes compound, host_matrix, doping_ratio, and sample_state. Conditions include atmosphere, temperature, excitation, delay, and gate_window. Every value in all three objects uses the field shape below, so identity and conditions are evidence-bearing too.
 
-Every entry in `fields` uses this shape:
+Every entry in `identity`, `conditions`, and `fields` uses this shape:
 
 ```json
 {"status":"reported","raw_value":"487","raw_unit":"nm","evidence_id":"E012"}

@@ -27,8 +27,8 @@ def main(source_text: str, output_text: str) -> None:
     rows = []
     for sample in data.get("samples", []):
         identity, conditions, fields = sample.get("identity", {}), sample.get("conditions", {}), sample.get("fields", {})
-        fixed = [sample.get("row_id"), identity.get("compound"), identity.get("host_matrix"), identity.get("doping_ratio"), identity.get("sample_state"), conditions.get("atmosphere"), conditions.get("temperature"), conditions.get("excitation"), conditions.get("delay"), conditions.get("gate_window")]
-        cells = [f"<td>{esc(x or '未报告')}</td>" for x in fixed] + [f"<td>{displayed(fields.get(c, {'status':'not_reported'}))}</td>" for c in columns]
+        fixed = [identity.get("compound"), identity.get("host_matrix"), identity.get("doping_ratio"), identity.get("sample_state"), conditions.get("atmosphere"), conditions.get("temperature"), conditions.get("excitation"), conditions.get("delay"), conditions.get("gate_window")]
+        cells = [f"<td>{esc(sample.get('row_id') or '未报告')}</td>"] + [f"<td>{displayed(x if isinstance(x, dict) else {'status':'not_reported'})}</td>" for x in fixed] + [f"<td>{displayed(fields.get(c, {'status':'not_reported'}))}</td>" for c in columns]
         rows.append("<tr>" + "".join(cells) + "</tr>")
     evidence_rows = []
     for e in data.get("evidence_ledger", []):

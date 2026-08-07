@@ -23,7 +23,7 @@ Read `references/extraction-policy.md` and `references/data-schema.md` before ex
 1. Confirm the supplied main PDF and whether SI is supplied. Record coverage; never claim SI was reviewed if unavailable.
 2. Read the paper and SI in full enough to locate relevant text, tables, captions, and measurement conditions. Search the keywords in the policy, then inspect every candidate source location.
 3. Define one record per unique test sample and condition. Do not merge measurements across compound, host/matrix, concentration, state, atmosphere, temperature, excitation, delay, or gate window.
-4. Add field-level evidence before adding a specific value. Use short quotes and a resolvable page/table/figure/SI location.
+4. Add field-level evidence before adding a specific value, including compound, host/matrix, concentration, sample state, and every measurement condition. Use short quotes and a resolvable page/table/figure/SI location.
 5. Mark missing information with a status, not a guessed value. Record cross-source conflicts and manual-review items.
 6. Validate JSON, render HTML, and report the output paths.
 
