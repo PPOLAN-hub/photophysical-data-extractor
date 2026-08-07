@@ -32,7 +32,7 @@ P001_Liu_2024/extra-data.xlsx
 3. Permit a main PDF without SI, but mark `si_status: missing` and never claim SI coverage.
 4. Process one manifest entry at a time into `outputs/<paper_id>/paper_data.json` and `report.html`.
 5. Keep sample Row IDs local to a paper (`S001`, `S002`, ...). The globally unique row key is `<paper_id>:<row_id>`.
-6. In the human-facing consolidated table, create one visual row per `<paper_id>:<compound>` and use its ambient/RT record as the primary comparison value. Keep secondary-condition records traceable behind that row instead of expanding the main table. Do not merge the same compound across different papers solely because names match.
+6. In the human-facing consolidated table, create one visual row per `<paper_id>:<compound>`. Place all reported film/solution and RT/77 K values in the shared metric columns and distinguish them with condition footnotes. Do not merge the same compound across different papers solely because names match.
 7. When consolidating records, retain `paper_id`, DOI, and every global Row ID behind that visual row.
 
 The manifest stores SHA-256 hashes so later runs can detect replacement or accidental cross-pairing.

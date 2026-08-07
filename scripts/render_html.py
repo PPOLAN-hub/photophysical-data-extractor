@@ -199,6 +199,7 @@ def sample_panel(sample):
 TABLE_COLUMNS = [
     ("compound", "化合物", "identity"),
     ("host_matrix", "Host", "identity"),
+    ("doping_ratio", "掺杂比例", "identity"),
     ("emission_assignment", "类型", "fields"),
     ("phi_pl", "Φ<sub>PL</sub>", "fields"),
     ("lambda_f", "λ<sub>F</sub>", "fields"),
@@ -228,18 +229,26 @@ def short_assignment(value):
         return "TADF"
     if "delayed fluorescence" in lower:
         return "DF"
+    if lower.strip() == "fluorescence":
+        return "F"
     return str(value or "—")
 
 
 def short_host(value):
     text = str(value or "")
     lower = text.lower()
-    if "pmma" in lower and "pva" in lower:
-        return "PMMA/PVA"
     if "pmma" in lower:
         return "PMMA"
     if "pva" in lower:
         return "PVA"
+    if "toluene" in lower or lower.strip() == "tol":
+        return "Tol"
+    if "acetonitrile" in lower or lower.strip() == "acn":
+        return "ACN"
+    if "chloroform" in lower or lower.strip() in {"chcl3", "chcl₃"}:
+        return "CHCl₃"
+    if "methylcyclohexane" in lower:
+        return "MeCHX"
     return text
 
 
@@ -262,7 +271,11 @@ def table_raw(name, field):
             if components and len({unit.lower() for _, unit in components}) == 1:
                 numbers = [float(number) for number, _ in components]
                 unit = components[0][1]
-                value = f"{min(numbers):g}–{max(numbers):g} {unit}"
+                unique_numbers = list(dict.fromkeys(numbers))
+                if name == "tau_df" or len(unique_numbers) > 3:
+                    value = f"{min(numbers):g}–{max(numbers):g} {unit}"
+                else:
+                    value = "/".join(f"{number:g}" for number in unique_numbers) + f" {unit}"
     if name in {"lambda_f", "lambda_df", "lambda_p"} and ";" in value:
         peaks = re.findall(r"[0-9.]+", value)
         unit = "nm" if "nm" in value.lower() else ""
@@ -309,36 +322,65 @@ def stacked_entry(sample, value):
     )
 
 
-def record_score(sample, name):
+def condition_descriptor(sample):
+    identity = sample.get("identity", {})
     conditions = sample.get("conditions", {})
-    temperature = raw(conditions.get("temperature"), "").lower()
-    atmosphere = raw(conditions.get("atmosphere"), "").lower()
-    assignment = short_assignment(raw(sample.get("fields", {}).get("emission_assignment"), ""))
-    score = 0
-    if temperature == "rt" or "room" in temperature:
-        score += 100
-    elif "77" in temperature or "cryogenic" in temperature:
-        score -= 100
-    elif "ambient" in atmosphere:
-        score += 70
-    if name in {"lambda_df", "tau_df", "phi_df"} and assignment == "TADF":
-        score += 60
-    if name in {"lambda_p", "tau_p", "phi_p"} and "RTP" in assignment:
-        score += 40
-    return score
+    host_full = raw(identity.get("host_matrix"), "未报告介质")
+    host = short_host(host_full)
+    ratio = raw(identity.get("doping_ratio"), "")
+    state = raw(identity.get("sample_state"), "")
+    temperature = raw(conditions.get("temperature"), "")
+    atmosphere = raw(conditions.get("atmosphere"), "")
+    excitation = raw(conditions.get("excitation"), "")
+    parts = []
+    if ratio:
+        parts.append(ratio)
+    if host:
+        parts.append(host)
+    if state:
+        state_lower = state.lower()
+        if "solution" in state_lower:
+            parts.append("溶液")
+        elif "film" in state_lower:
+            parts.append("薄膜")
+    if "pva" in host_full.lower() and "oxygen" in host_full.lower():
+        parts.append("PVA 阻氧层")
+    if temperature:
+        parts.append(temperature)
+    if atmosphere:
+        parts.append(atmosphere)
+    if excitation:
+        parts.append("λex=" + excitation)
+    return "；".join(parts) or "条件未完整报告"
 
 
-def primary_field(records, group, name):
-    candidates = []
+def condition_marker(sample, registry, labels):
+    description = condition_descriptor(sample)
+    if description not in registry:
+        index = len(registry)
+        marker = chr(ord("a") + index) if index < 26 else f"a{index + 1}"
+        registry[description] = marker
+        labels.append((marker, description))
+    return registry[description]
+
+
+def all_condition_field(records, group, name, registry, labels):
+    entries = []
+    seen = set()
     for sample in records:
         field = sample.get(group, {}).get(name)
         if not isinstance(field, dict) or field.get("status") != "reported":
             continue
-        candidates.append((record_score(sample, name), sample, field))
-    if not candidates:
+        marker = condition_marker(sample, registry, labels)
+        value = table_raw(name, field)
+        key = (re.sub(r"<[^>]+>", "", value), marker)
+        if key in seen:
+            continue
+        seen.add(key)
+        entries.append(value + evidence_link(field.get("evidence_id")) + f"<sup class='condition-ref'>[{marker}]</sup>")
+    if not entries:
         return "<span class='table-empty'>—</span>"
-    candidates.sort(key=lambda item: item[0], reverse=True)
-    return compact_field(candidates[0][2], name)
+    return "<span class='condition-values'>" + " / ".join(entries) + "</span>"
 
 
 def assignment_cell(records):
@@ -379,6 +421,8 @@ def data_table(samples, analysis):
     for sample in samples:
         compound = raw(sample.get("identity", {}).get("compound"), "未命名化合物")
         grouped.setdefault(compound, []).append(sample)
+    condition_registry = {}
+    condition_labels = []
     rows = []
     for compound, records in grouped.items():
         cells = []
@@ -393,17 +437,22 @@ def data_table(samples, analysis):
             elif name == "emission_assignment":
                 value = assignment_cell(records)
             else:
-                value = primary_field(records, group, name)
+                value = all_condition_field(records, group, name, condition_registry, condition_labels)
             cell_class = "compound-cell" if name == "compound" else ""
             cells.append(f"<td class='{cell_class}'>{value}</td>")
         record_ids = ", ".join(str(item.get("row_id")) for item in records)
         rows.append(f"<tr title='条件记录：{esc(record_ids)}'>{''.join(cells)}</tr>")
     innovation = analysis_text(analysis.get("one_sentence_innovation")) if isinstance(analysis, dict) else "未提供"
     colspan = len(TABLE_COLUMNS)
+    footnotes = "".join(
+        f"<div><sup>[{esc(marker)}]</sup> {esc(description)}</div>"
+        for marker, description in condition_labels
+    ) or "<div>未生成条件脚注</div>"
     return (
         "<div class='data-table-wrap'><table class='data-table'>"
         f"<thead><tr>{headers}</tr></thead>"
         f"<tbody>{logic_rows(analysis, colspan)}{''.join(rows)}"
+        f"<tr class='condition-footnotes'><td colspan='{colspan}'><b>条件脚注：</b>{footnotes}</td></tr>"
         f"<tr class='innovation-row'><td colspan='{colspan}'><b>创新点：</b>{innovation}</td></tr>"
         "</tbody></table></div>"
     )
@@ -562,6 +611,9 @@ h1{{max-width:1100px;margin:0;font-size:clamp(25px,3vw,38px);line-height:1.25}}
 .paper-note-row td,.innovation-row td{{text-align:left;padding:13px 16px;white-space:normal;max-width:none;background:#fff}}
 .paper-note-row td{{color:#334155}}.paper-note-row b{{color:#172b4d}}
 .innovation-row td{{border-top:2px solid #9fb2c8;background:#fbfcfe;font-size:13px}}.innovation-row b{{color:var(--blue)}}
+.condition-ref{{margin-left:2px;color:#7a4d00;font-size:9px;font-weight:800}}.condition-values{{white-space:normal}}
+.condition-footnotes td{{text-align:left;max-width:none;padding:12px 16px;background:#fffdf7;color:#5f5335;line-height:1.55}}
+.condition-footnotes div{{display:inline;margin-right:18px}}.condition-footnotes sup{{color:#7a4d00;font-weight:800}}
 .condition-line{{display:block;margin-top:4px;color:#526070}}.table-empty{{color:#a4adba}}
 .stacked-entry{{padding:7px 0;border-bottom:1px dashed #d8e0ea}}.stacked-entry:first-child{{padding-top:0}}.stacked-entry:last-child{{padding-bottom:0;border-bottom:0}}
 .condition-tag{{display:inline-block;margin-bottom:4px;padding:2px 6px;border-radius:999px;background:#e9f1fb;color:#2c5687;font-size:10px;font-weight:800;white-space:nowrap}}
@@ -610,7 +662,7 @@ sub{{font-size:.72em;line-height:0}}
     <dl class="paper-grid">{paper_information(paper)}</dl>
   </section>
   <section class="section">
-    <div class="section-title"><h2>主数据表</h2><p>每种化合物一行；主表优先显示室温核心数据，全部条件仍保留在 JSON 与证据台账</p></div>
+    <div class="section-title"><h2>主数据表</h2><p>每种化合物一行；RT/77 K、薄膜/溶液等条件以脚注区分</p></div>
     {table_html}
   </section>
   <section class="section">

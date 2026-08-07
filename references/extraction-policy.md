@@ -8,6 +8,8 @@
 - Keep fluorescence, delayed fluorescence, TADF, phosphorescence, persistent luminescence, and total PL quantities separate. A paper may contribute more than one mechanism-specific record for the same molecular formulation when sample preparation or measurement conditions differ.
 - Record all multi-exponential lifetime components plus the reported average and its definition.
 - Preserve source units. A normalized value is optional and must be reproducible from source values.
+- Extract every reported photophysical spectrum, peak, yield, and lifetime for each materially different phase and condition, including solution, doped film, neat film, crystal, powder, aggregate, RT, 77 K, air, inert gas, and vacuum. Do not keep only the headline room-temperature film result.
+- Treat solution fluorescence at RT and solution phosphorescence at 77 K as separate evidence-bearing records when reported. Record solvent and concentration in `host_matrix` and `doping_ratio`, respectively.
 
 ## Evidence location format
 
