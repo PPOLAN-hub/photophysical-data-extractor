@@ -66,14 +66,16 @@ npx skills add PPOLAN-hub/photophysical-data-extractor --skill photophysical-dat
 
 ### Cherry Studio
 
-Cherry Studio 1.9.12 或更新版本支持界面安装，无需命令行：
+Cherry Studio 1.9.12 或更新版本支持界面安装，无需命令行。请下载已经打包并测试的专用文件：
 
-1. 使用有权限的 GitHub 账号在仓库页面选择 `Code → Download ZIP`；
+[下载 photophysical-data-extractor-cherry-studio.zip](https://github.com/PPOLAN-hub/photophysical-data-extractor/releases/latest/download/photophysical-data-extractor-cherry-studio.zip)
+
+1. 使用有权限的 GitHub 账号下载上述 ZIP；
 2. 打开 Cherry Studio 的 `设置 → 技能`；
-3. 选择“从 ZIP 文件安装”，或将 ZIP 拖入安装区域；
+3. 选择“从 ZIP 文件安装”，并直接选择下载的文件；
 4. 打开目标 Agent 的设置，在“技能”中启用 `photophysical-data-extractor`。
 
-私人仓库不会出现在公共技能搜索结果中，因此 Cherry Studio 使用本地 ZIP 导入。
+ZIP 不需要解压或重新压缩。私人仓库不会出现在公共技能搜索结果中，因此 Cherry Studio 使用本地 ZIP 导入。
 
 ## 调用
 
