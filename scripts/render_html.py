@@ -4,6 +4,7 @@ import html
 import json
 import re
 import sys
+from copy import deepcopy
 from pathlib import Path
 
 
@@ -115,7 +116,8 @@ def evidence_link(evidence_id):
     if not evidence_id:
         return ""
     safe_id = esc(evidence_id)
-    return f" <a class='evidence-link' href='#{safe_id}' title='跳转到证据 {safe_id}'>[{safe_id}]</a>"
+    display_id = esc(str(evidence_id).split("--", 1)[-1])
+    return f" <a class='evidence-link' href='#{safe_id}' title='跳转到证据 {display_id}'>[{display_id}]</a>"
 
 
 def displayed(field):
@@ -658,7 +660,7 @@ def evidence_cards(ledger):
         cards.append(
             f"<article class='evidence-card' id='{esc(evidence_id)}'>"
             "<header>"
-            f"<div><span class='evidence-id'>{esc(evidence_id)}</span>"
+            f"<div><span class='evidence-id'>{esc(str(evidence_id).split('--', 1)[-1])}</span>"
             f"<span class='evidence-row'>{esc(evidence.get('row_id'))}</span></div>"
             f"{confidence_badge(evidence.get('confidence'))}"
             "</header>"
@@ -688,18 +690,127 @@ def paper_information(paper):
     return "".join(rows)
 
 
-def main(source_text: str, output_text: str) -> None:
-    source = Path(source_text)
-    data = json.loads(source.read_text(encoding="utf-8"))
+def bool_text(value):
+    return "是" if value is True else "否" if value is False else esc(value or "未报告")
+
+
+def scope_text(value):
+    if isinstance(value, list):
+        return "、".join(str(item) for item in value)
+    return str(value or "未报告")
+
+
+def article_information_table(data):
+    paper = data.get("paper", {})
     samples = data.get("samples", [])
     ledger = data.get("evidence_ledger", [])
-    paper = data.get("paper", {})
-    analysis = data.get("article_analysis", {})
-    table_html = data_table(samples, analysis)
+    review_items = data.get("manual_review", [])
     compound_count = len({raw(item.get("identity", {}).get("compound"), "") for item in samples})
+    title = paper.get("title") or "题目未报告"
+    doi = paper.get("doi") or "DOI 未报告"
+    return (
+        "<div class='article-info-wrap'><table class='article-info-table'><tbody>"
+        f"<tr><th>题目</th><td class='article-title' colspan='7'>{esc(title)}</td></tr>"
+        f"<tr><th>DOI</th><td class='article-doi' colspan='3'>{esc(doi)}</td>"
+        f"<th>期刊 / 年份</th><td colspan='3'>{esc(paper.get('journal_year') or '未报告')}</td></tr>"
+        f"<tr><th>文献 ID</th><td>{esc(paper.get('paper_id') or '未报告')}</td>"
+        f"<th>主文核对</th><td>{bool_text(paper.get('main_pdf_reviewed'))}</td>"
+        f"<th>SI 核对</th><td>{bool_text(paper.get('supporting_information_reviewed'))}</td>"
+        "<th>数据源</th><td>冻结 JSON</td></tr>"
+        f"<tr><th>抽取范围</th><td colspan='7'>{esc(scope_text(paper.get('scope')))}</td></tr>"
+        "<tr class='article-stats'>"
+        f"<th>化合物</th><td>{compound_count}</td><th>测量条件</th><td>{len(samples)}</td>"
+        f"<th>证据</th><td>{len(ledger)}</td><th>复核提醒</th><td>{len(review_items)}</td>"
+        "</tr></tbody></table></div>"
+    )
+
+
+def namespace_evidence(data, prefix):
+    namespaced = deepcopy(data)
+
+    def visit(node):
+        if isinstance(node, dict):
+            for key, value in list(node.items()):
+                if key == "evidence_id" and isinstance(value, str) and value:
+                    node[key] = f"{prefix}--{value}"
+                elif key == "evidence_ids" and isinstance(value, list):
+                    node[key] = [f"{prefix}--{item}" if isinstance(item, str) and item else item for item in value]
+                else:
+                    visit(value)
+        elif isinstance(node, list):
+            for item in node:
+                visit(item)
+
+    visit(namespaced)
+    return namespaced
+
+
+def review_and_evidence_panel(data):
+    ledger = data.get("evidence_ledger", [])
     review_items = data.get("manual_review", [])
     review_html = "".join(f"<li>{scientific_value(item)}</li>" for item in review_items) or "<li>未列出需人工复核项目</li>"
-    title = paper.get("title") or "纯有机长寿命发光证据化抽取报告"
+    return (
+        "<section class='audit-section'>"
+        "<div class='section-title'><h2>证据台账与人工复核</h2><p>高置信度证据精简显示；中低置信度保留复核提示</p></div>"
+        "<div class='audit-panel'>"
+        f"<div class='review'><h3>人工复核（{len(review_items)} 项）</h3><ul>{review_html}</ul></div>"
+        f"<div class='evidence-grid'>{evidence_cards(ledger)}</div>"
+        "</div></section>"
+    )
+
+
+def article_block(data, batch_mode, index):
+    paper = data.get("paper", {})
+    paper_id = str(paper.get("paper_id") or f"P{index:03d}")
+    safe_article_id = re.sub(r"[^A-Za-z0-9_-]+", "-", paper_id).strip("-") or f"P{index:03d}"
+    working_data = namespace_evidence(data, f"{safe_article_id}-{index}") if batch_mode else data
+    samples = working_data.get("samples", [])
+    analysis = working_data.get("article_analysis", {})
+    data_open = "" if batch_mode else " open"
+    return (
+        f"<article class='paper-report' id='{esc(safe_article_id)}'>"
+        "<details class='article-info' open>"
+        f"<summary>文章信息 · {esc(paper_id)}</summary>"
+        f"{article_information_table(working_data)}</details>"
+        f"<details class='article-data'{data_open}>"
+        f"<summary>主数据与证据审查 · {esc(paper_id)} · {len(samples)} 组测量条件</summary>"
+        "<div class='article-data-body'>"
+        "<section class='data-section'>"
+        "<div class='section-title'><h2>主数据表</h2><p>每种化合物一行；RT/77 K、薄膜/溶液等条件以脚注区分</p></div>"
+        f"{data_table(samples, analysis)}</section>"
+        f"{review_and_evidence_panel(working_data)}"
+        "</div></details></article>"
+    )
+
+
+def load_documents(source):
+    payload = json.loads(source.read_text(encoding="utf-8"))
+    if isinstance(payload, list):
+        return payload
+    if isinstance(payload, dict) and isinstance(payload.get("papers"), list):
+        return payload["papers"]
+    if isinstance(payload, dict) and isinstance(payload.get("paper_data_files"), list):
+        documents = []
+        for item in payload["paper_data_files"]:
+            path = Path(item)
+            if not path.is_absolute():
+                path = source.parent / path
+            documents.append(json.loads(path.read_text(encoding="utf-8")))
+        return documents
+    return [payload]
+
+
+def main(source_text: str, output_text: str) -> None:
+    source = Path(source_text)
+    documents = load_documents(source)
+    if not documents:
+        raise ValueError("No paper data found in input JSON")
+    batch_mode = len(documents) > 1
+    title = (
+        f"批量文献数据抽取报告（{len(documents)} 篇）"
+        if batch_mode else documents[0].get("paper", {}).get("title") or "纯有机长寿命发光证据化抽取报告"
+    )
+    articles_html = "".join(article_block(item, batch_mode, index) for index, item in enumerate(documents, start=1))
     doc = f"""<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
@@ -713,6 +824,17 @@ html{{scroll-behavior:smooth}}
 body{{margin:0;background:#f3f6f9;color:var(--ink);font:14px/1.65 -apple-system,BlinkMacSystemFont,"Segoe UI","Microsoft YaHei",Arial,sans-serif}}
 a{{color:var(--blue)}}
 .page{{width:min(1440px,calc(100% - 32px));margin:24px auto 56px}}
+.paper-report{{margin:0 0 22px}}.paper-report+ .paper-report{{padding-top:22px;border-top:3px solid #aab9cc}}
+.article-info,.article-data{{background:#fff;border:1px solid var(--line);border-radius:9px;overflow:hidden}}
+.article-data{{margin-top:10px}}.article-info>summary,.article-data>summary{{cursor:pointer;padding:10px 14px;background:#edf3fa;color:#233a57;font-size:12px;font-weight:800}}
+.article-info[open]>summary,.article-data[open]>summary{{border-bottom:1px solid var(--line)}}
+.article-info-wrap{{overflow:auto}}.article-info-table{{width:100%;border-collapse:collapse;font-size:12px;line-height:1.45}}
+.article-info-table th,.article-info-table td{{padding:9px 10px;border-right:1px solid #d6dee8;border-bottom:1px solid #d6dee8;text-align:left;vertical-align:middle}}
+.article-info-table tr:last-child>*{{border-bottom:0}}.article-info-table tr>*:last-child{{border-right:0}}
+.article-info-table th{{width:92px;white-space:nowrap;background:#f7f9fc;color:#475569;font-weight:750}}.article-info-table td{{background:#fff}}
+.article-title{{font-weight:850}}.article-doi{{color:#c5162e;font-weight:850}}.article-stats td{{font-weight:800;color:var(--blue)}}
+.article-data-body{{padding:14px}}.data-section{{margin:0}}.audit-section{{margin-top:18px}}.audit-panel{{overflow:hidden;background:#fff;border:1px solid var(--line);border-radius:9px}}
+.audit-panel .review{{border-width:0 0 1px 4px;border-radius:0}}.audit-panel .review h3{{margin:0 0 8px;font-size:12px}}.audit-panel .evidence-grid{{border-top:0}}
 .hero{{background:#fff;border:1px solid var(--line);border-top:5px solid var(--blue);border-radius:12px;padding:28px 30px;box-shadow:0 8px 24px rgba(24,34,53,.06)}}
 .eyebrow{{margin:0 0 6px;color:var(--blue);font-weight:700;letter-spacing:.08em}}
 h1{{max-width:1100px;margin:0;font-size:clamp(25px,3vw,38px);line-height:1.25}}
@@ -784,39 +906,13 @@ blockquote span{{display:block;margin-bottom:2px;color:var(--blue);font-size:11p
 .review li{{margin:6px 0}}
 .empty{{color:var(--muted)}}
 sub{{font-size:.72em;line-height:0}}
-@media(max-width:820px){{.page{{width:min(100% - 18px,1440px)}}.summary{{grid-template-columns:repeat(2,1fr)}}.paper-grid,.koi-grid{{grid-template-columns:1fr}}}}
+@media(max-width:820px){{.page{{width:min(100% - 18px,1440px)}}.summary{{grid-template-columns:repeat(2,1fr)}}.paper-grid,.koi-grid{{grid-template-columns:1fr}}.article-info-table{{min-width:900px}}}}
 @media print{{body{{background:#fff}}.page{{width:100%;margin:0}}.hero,.summary-card{{box-shadow:none}}details.ledger{{break-before:page}}}}
 </style>
 </head>
 <body>
 <main class="page">
-  <header class="hero">
-    <p class="eyebrow">PURE-ORGANIC LONG-LIVED EMISSION · EVIDENCE REPORT</p>
-    <h1>{esc(title)}</h1>
-    <div class="hero-meta"><span>{esc(paper.get('doi', 'DOI 未报告'))}</span><span>{esc(paper.get('journal_year', '期刊信息未报告'))}</span><span>数据源：冻结 JSON</span></div>
-  </header>
-  <section class="summary" aria-label="抽取总览">
-    <div class="summary-card"><strong>{compound_count}</strong><span>种化合物</span></div>
-    <div class="summary-card"><strong>{len(samples)}</strong><span>组独立测量条件</span></div>
-    <div class="summary-card"><strong>{len(ledger)}</strong><span>条可追溯证据</span></div>
-    <div class="summary-card"><strong>{len(review_items)}</strong><span>项人工复核提醒</span></div>
-  </section>
-  <section class="section">
-    <div class="section-title"><h2>论文基本信息</h2><p>主文与 Supporting Information 覆盖状态</p></div>
-    <dl class="paper-grid">{paper_information(paper)}</dl>
-  </section>
-  <section class="section">
-    <div class="section-title"><h2>主数据表</h2><p>每种化合物一行；RT/77 K、薄膜/溶液等条件以脚注区分</p></div>
-    {table_html}
-  </section>
-  <section class="section">
-    <div class="section-title"><h2>证据台账</h2><p>点击参数后的证据编号可跳转至对应原文短引</p></div>
-    <details class="ledger" open><summary>展开 / 收起全部证据（{len(ledger)} 条）</summary><div class="evidence-grid">{evidence_cards(ledger)}</div></details>
-  </section>
-  <section class="section">
-    <div class="section-title"><h2>需人工复核</h2><p>冲突、定义差异与 SI-only 数据</p></div>
-    <div class="review"><ul>{review_html}</ul></div>
-  </section>
+  {articles_html}
 </main>
 </body>
 </html>"""

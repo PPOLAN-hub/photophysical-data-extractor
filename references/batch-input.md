@@ -35,4 +35,19 @@ P001_Liu_2024/extra-data.xlsx
 6. In the human-facing consolidated table, create one visual row per `<paper_id>:<compound>`. Place all reported film/solution and RT/77 K values in the shared metric columns and distinguish them with condition footnotes. Do not merge the same compound across different papers solely because names match.
 7. When consolidating records, retain `paper_id`, DOI, and every global Row ID behind that visual row.
 
+## Consolidated HTML
+
+After validating every per-paper JSON, create an index beside the batch outputs:
+
+```json
+{
+  "paper_data_files": [
+    "outputs/P001_Liu_2024/paper_data.json",
+    "outputs/P002_Zhang_2025/paper_data.json"
+  ]
+}
+```
+
+Run `scripts/render_html.py batch_report.json batch_report.html`. The renderer also accepts a JSON array of canonical paper objects or `{"papers": [...]}`. In a consolidated report, keep each article-information table open and keep that article's combined main-data/evidence-review region closed by default. Evidence anchors are automatically namespaced by paper and cannot collide across articles.
+
 The manifest stores SHA-256 hashes so later runs can detect replacement or accidental cross-pairing.

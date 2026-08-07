@@ -1,6 +1,7 @@
 # HTML report presentation rules
 
 - Treat `paper_data.json` as the only data source and never modify extracted values during rendering.
+- Replace the separate hero title, summary cards, and basic-information panel with one compact article-information table immediately above the main data. Use the same 12 px base size as the main table. Include title, DOI, journal/year, paper ID, main/SI coverage, scope, compound count, condition count, evidence count, and review count. Render the title and DOI in bold and the DOI in red.
 - Do not display the raw JSON or the rate-constant calculation block in the human-facing HTML. Keep both in the canonical JSON for machine use and audit.
 - Keep one independent sample/condition record per JSON object, but render one visual table row per compound within a paper. Put all reported values for the same physical quantity in the same column, including film/solution, RT/77 K, and other reported conditions.
 - Use compact columns comparable to a literature spreadsheet: Compound, Host, doping ratio, Type, yields, wavelengths, lifetimes, and reported rate constants. Omit Row ID and long condition prose from the main comparison cells.
@@ -15,5 +16,6 @@
 - Show reported metrics prominently and keep missing fields out of the visual comparison area. This is a display choice only; do not remove missing statuses from JSON.
 - Render evidence as readable cards containing the field label, extracted value, precise location, the shortest useful source-text fragment, extraction type, confidence, and manual-check note.
 - Keep high-confidence evidence cards index-like: for table evidence show only the table identifier and location; for non-table evidence show only the first 6–10 source words. Do not repeat the extracted value or display a review note on high-confidence cards. Show the extracted value, complete short quote, and a prominent manual-review warning only for medium/low-confidence evidence.
+- Merge the Evidence Ledger and manual-review list into one bordered review region. For a single paper, keep the article-information table and the combined main-data/review region open. For a multi-paper consolidated report, keep every article-information table open but wrap that article's main data plus combined evidence/manual-review region in one closed `<details>` element. Never place evidence from different papers in the same unscoped anchor namespace.
 - Make every evidence citation in the main view link to its Evidence Ledger card.
 - Use a clean research-review layout without gradients, animation, decorative illustrations, or external assets.
