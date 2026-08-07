@@ -876,7 +876,7 @@ h1{{max-width:1100px;margin:0;font-size:clamp(25px,3vw,38px);line-height:1.25}}
 .paper-note-row td{{color:#334155}}.paper-note-row b{{color:#172b4d}}
 .innovation-row td{{border-top:2px solid #9fb2c8;background:#fbfcfe;font-size:13px}}.innovation-row b{{color:var(--blue)}}
 .condition-ref{{margin-left:2px;color:#7a4d00;font-size:9px;font-weight:800}}.condition-values{{white-space:normal}}
-.doped-rt-phosphor{{color:#c5162e}}.doped-77k-phosphor{{color:#245fc7}}
+.doped-rt-phosphor{{color:#c5162e}}.doped-77k-phosphor{{color:#0000FF}}
 .best-lifetime{{font-weight:850;text-decoration:underline;text-underline-offset:2px}}
 .best-efficiency{{font-weight:850;text-decoration:underline;text-underline-offset:2px}}
 .best-77k-lifetime{{font-weight:850}}
