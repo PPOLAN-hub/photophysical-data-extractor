@@ -877,7 +877,7 @@ h1{{max-width:1100px;margin:0;font-size:clamp(25px,3vw,38px);line-height:1.25}}
 .data-table{{border-collapse:separate;border-spacing:0;min-width:1680px;width:100%;font-size:12pt;line-height:1.45}}
 .data-table th,.data-table td{{padding:10px 9px;border-right:1px solid #d6dee8;border-bottom:1px solid #d6dee8;text-align:center;vertical-align:middle;min-width:88px;max-width:230px;overflow-wrap:anywhere}}
 .data-table thead th{{position:sticky;top:0;z-index:3;background:#edf3fa;color:#233a57;font-size:12pt;line-height:1.25;font-weight:800;white-space:nowrap}}
-.data-table thead th.metric-header{{font-size:14pt;font-weight:400}}.metric-header .metric-symbol{{font-style:italic;font-weight:400}}.metric-header sub{{font-style:normal;font-weight:400}}
+.data-table thead th.metric-header{{font-family:"Times New Roman",Times,serif;font-size:14pt;font-weight:400}}.metric-header .metric-symbol{{font-style:italic;font-weight:400}}.metric-header sub{{font-style:normal;font-weight:400}}
 .data-table tr:last-child>*{{border-bottom:0}}.data-table tr>*:last-child{{border-right:0}}
 .data-table tbody tr:nth-child(even) td,.data-table tbody tr:nth-child(even) th{{background:#fafbfd}}
 .data-table tbody tr:hover td,.data-table tbody tr:hover th{{background:#f1f7ff}}
