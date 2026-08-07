@@ -2,7 +2,7 @@
 
 面向有机材料光物理论文的证据可溯源数据抽取 Skill，简称 **PDE**。
 
-单篇论文上传正文及 Supporting Information（SI）后，输入 `PDE` 即可；多篇论文使用 `PDFmore`。Agent 会自动完成论文读取、数据抽取、证据关联、JSON 校验和 HTML 报告生成；用户不需要手工执行脚本或自行制作 HTML。
+单篇论文上传正文及 Supporting Information（SI）后，输入 `PDE` 即可；多篇论文使用 `PDEmore`。Agent 会自动完成论文读取、数据抽取、证据关联、JSON 校验和 HTML 报告生成；用户不需要手工执行脚本或自行制作 HTML。
 
 ## 主要能力
 
@@ -96,10 +96,10 @@ Agent 应自行完成数据抽取、验证和 HTML 渲染，只向用户交付�
 同时处理多篇论文时，按下一节命名文件并输入：
 
 ```text
-PDFmore
+PDEmore
 ```
 
-`PDFmore` 启动严格的批量配对；Agent 不会按标题或上传顺序猜测正文与 SI 的对应关系。
+`PDEmore` 启动严格的批量配对；Agent 不会按标题或上传顺序猜测正文与 SI 的对应关系。
 
 ## 批量文件命名
 

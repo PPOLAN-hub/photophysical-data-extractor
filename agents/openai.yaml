@@ -1,4 +1,4 @@
 interface:
   display_name: "Photophysical Data Extractor"
   short_description: "Extract traceable photophysical literature data"
-  default_prompt: "Use $photophysical-data-extractor: PDE for one paper or PDFmore for a named batch, then automatically deliver validated JSON and HTML."
+  default_prompt: "Use $photophysical-data-extractor: PDE for one paper or PDEmore for a named batch, then automatically deliver validated JSON and HTML."

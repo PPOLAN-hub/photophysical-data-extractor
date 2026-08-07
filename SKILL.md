@@ -1,13 +1,13 @@
 ---
 name: photophysical-data-extractor
-description: Extract evidence-traceable photophysical data, article KOI, innovation, and logical structure from organic-material paper PDFs and their Supporting Information, then automatically produce validated JSON and HTML review reports. Invoke for one paper whenever the user says "PDE" and for multiple papers whenever the user says "PDFmore". Also use for fluorescence, phosphorescence, RTP, afterglow, delayed fluorescence, TADF, persistent luminescence, PLQY, lifetime, spectra, host-matrix, rate constants, deterministic main-SI pairing, and batch literature organization where every value or synthesized claim must link to source evidence.
+description: Extract evidence-traceable photophysical data, article KOI, innovation, and logical structure from organic-material paper PDFs and their Supporting Information, then automatically produce validated JSON and HTML review reports. Invoke for one paper whenever the user says "PDE" and for multiple papers whenever the user says "PDEmore". Also use for fluorescence, phosphorescence, RTP, afterglow, delayed fluorescence, TADF, persistent luminescence, PLQY, lifetime, spectra, host-matrix, rate constants, deterministic main-SI pairing, and batch literature organization where every value or synthesized claim must link to source evidence.
 ---
 
 # Photophysical Data Extractor
 
 Extract evidence, not plausible values. Accept one organic photophysical paper PDF and optional SI, or a deterministically paired batch; write canonical JSON and render HTML audit reports. Cover prompt fluorescence as well as long-lived emission while keeping every mechanism and measurement condition distinct.
 
-Treat `PDE` as the single-paper invocation keyword. A single-paper upload may contain a main PDF plus one SI PDF with arbitrary filenames; treat them as one article set, distinguish main and SI from their document contents, and do not ask the user to rename or pair them. Treat `PDFmore` as the multi-paper invocation keyword and apply the deterministic batch naming rules below. Once invoked, complete extraction, JSON validation, and HTML rendering autonomously. Never ask the user to run validator or renderer commands.
+Treat `PDE` as the single-paper invocation keyword. A single-paper upload may contain a main PDF plus one SI PDF with arbitrary filenames; treat them as one article set, distinguish main and SI from their document contents, and do not ask the user to rename or pair them. Treat `PDEmore` as the multi-paper invocation keyword and apply the deterministic batch naming rules below. Once invoked, complete extraction, JSON validation, and HTML rendering autonomously. Never ask the user to run validator or renderer commands.
 
 ## Required deliverables
 
