@@ -457,7 +457,13 @@ def all_condition_field(records, group, name, registry, labels, maxima):
                 classes.append("best-77k-lifetime")
         if classes:
             value = f"<span class='{' '.join(classes)}'>{value}</span>"
-        entries.append(value + evidence_link(field.get("evidence_id")) + f"<sup class='condition-ref'>[{marker}]</sup>")
+        entries.append(
+            "<span class='value-citation'>"
+            + value
+            + f"<sup class='condition-ref'>[{marker}]</sup>"
+            + evidence_link(field.get("evidence_id"))
+            + "</span>"
+        )
     if not entries:
         return "<span class='table-empty'>—</span>"
     return "<span class='condition-values'>" + "<br>".join(entries) + "</span>"
@@ -875,7 +881,7 @@ h1{{max-width:1100px;margin:0;font-size:clamp(25px,3vw,38px);line-height:1.25}}
 .paper-note-row td,.innovation-row td{{text-align:left;padding:13px 16px;white-space:normal;max-width:none;background:#fff}}
 .paper-note-row td{{color:#334155}}.paper-note-row b{{color:#172b4d}}
 .innovation-row td{{border-top:2px solid #9fb2c8;background:#fbfcfe;font-size:12pt}}.innovation-row b{{color:var(--blue)}}
-.condition-ref{{margin-left:2px;color:#7a4d00;font-size:9px;font-weight:800}}.condition-values{{white-space:normal}}
+.condition-ref{{margin-left:2px;color:#7a4d00;font-size:9px;font-weight:800}}.condition-values{{white-space:normal}}.value-citation{{display:inline-block;white-space:nowrap}}
 .doped-rt-phosphor{{color:#c5162e}}.doped-77k-phosphor{{color:#0000FF}}
 .best-lifetime{{font-weight:850;text-decoration:underline;text-underline-offset:2px}}
 .best-efficiency{{font-weight:850;text-decoration:underline;text-underline-offset:2px}}
@@ -886,7 +892,7 @@ h1{{max-width:1100px;margin:0;font-size:clamp(25px,3vw,38px);line-height:1.25}}
 .stacked-entry{{padding:7px 0;border-bottom:1px dashed #d8e0ea}}.stacked-entry:first-child{{padding-top:0}}.stacked-entry:last-child{{padding-bottom:0;border-bottom:0}}
 .condition-tag{{display:inline-block;margin-bottom:4px;padding:2px 6px;border-radius:999px;background:#e9f1fb;color:#2c5687;font-size:10px;font-weight:800;white-space:nowrap}}
 .record-chip{{display:block;margin:3px auto;padding:2px 5px;border-radius:4px;background:#edf4ff;width:max-content}}
-.evidence-link{{font-size:10px;text-decoration:none;font-weight:700;white-space:nowrap}}
+.evidence-link{{font-size:10px;text-decoration:none;font-weight:700;white-space:nowrap}}.data-table .evidence-link{{color:#9ca3af}}.data-table .evidence-link:hover{{color:#6b7280}}
 .sample-note{{margin:0;padding:10px 14px;border-top:1px solid #edf0f4;background:#fffdf7;color:#675c3c;font-size:12px}}
 .status{{display:inline-block;border-radius:4px;padding:1px 5px;font-size:11px;font-weight:650}}.not_reported,.muted{{background:#eef1f4;color:#687385}}.uncertain{{background:var(--amber-soft);color:var(--amber)}}
 details.ledger{{background:#fff;border:1px solid var(--line);border-radius:10px;overflow:hidden}}
