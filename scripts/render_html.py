@@ -198,10 +198,8 @@ def sample_panel(sample):
 
 TABLE_COLUMNS = [
     ("compound", "化合物", "identity"),
-    ("host_matrix", "Host/Matrix", "identity"),
-    ("doping_ratio", "掺杂比例", "identity"),
-    ("sample_state", "样品与条件", "condition_summary"),
-    ("emission_assignment", "发光归属", "fields"),
+    ("host_matrix", "Host", "identity"),
+    ("emission_assignment", "类型", "fields"),
     ("phi_pl", "Φ<sub>PL</sub>", "fields"),
     ("lambda_f", "λ<sub>F</sub>", "fields"),
     ("tau_f", "τ<sub>F</sub>", "fields"),
@@ -211,7 +209,6 @@ TABLE_COLUMNS = [
     ("lambda_p", "λ<sub>P</sub>", "fields"),
     ("tau_p", "τ<sub>P</sub>", "fields"),
     ("phi_p", "Φ<sub>P</sub>", "fields"),
-    ("afterglow_visible_time", "可见余辉", "fields"),
     ("k_isc", "k<sub>ISC</sub>", "fields"),
     ("k_risc", "k<sub>RISC</sub>", "fields"),
     ("k_rp", "k<sub>P</sub>/k<sub>r,P</sub>", "fields"),
@@ -219,10 +216,65 @@ TABLE_COLUMNS = [
 ]
 
 
-def compact_field(field):
+def short_assignment(value):
+    lower = str(value or "").lower()
+    if "fluorescence/phosphorescence" in lower or "dual emission" in lower:
+        return "F/RTP"
+    if "thermally activated delayed fluorescence" in lower or lower.strip() == "tadf":
+        return "TADF"
+    if "phosphor" in lower or "rtp" in lower:
+        return "RTP"
+    if "tadf" in lower:
+        return "TADF"
+    if "delayed fluorescence" in lower:
+        return "DF"
+    return str(value or "—")
+
+
+def short_host(value):
+    text = str(value or "")
+    lower = text.lower()
+    if "pmma" in lower and "pva" in lower:
+        return "PMMA/PVA"
+    if "pmma" in lower:
+        return "PMMA"
+    if "pva" in lower:
+        return "PVA"
+    return text
+
+
+def table_raw(name, field):
+    value = raw(field, "—")
+    if name == "emission_assignment":
+        return esc(short_assignment(value))
+    if name == "host_matrix":
+        return esc(short_host(value))
+    if name in {"phi_pl", "phi_f", "phi_df", "phi_p"}:
+        match = re.search(r"\(([0-9.]+\s*%)\)", value)
+        if match:
+            value = match.group(1)
+    if name in {"tau_f", "tau_df", "tau_p"}:
+        preferred = re.search(r"tau(?:_?avg|_?longest)\s*=\s*([0-9.]+)\s*(ns|ms|s)", value, re.IGNORECASE)
+        if preferred:
+            value = preferred.group(1) + " " + preferred.group(2)
+        elif value.lower().count("tau") > 1:
+            components = re.findall(r"([0-9.]+)\s*(ns|ms|s)", value, re.IGNORECASE)
+            if components and len({unit.lower() for _, unit in components}) == 1:
+                numbers = [float(number) for number, _ in components]
+                unit = components[0][1]
+                value = f"{min(numbers):g}–{max(numbers):g} {unit}"
+    if name in {"lambda_f", "lambda_df", "lambda_p"} and ";" in value:
+        peaks = re.findall(r"[0-9.]+", value)
+        unit = "nm" if "nm" in value.lower() else ""
+        if len(peaks) > 1:
+            value = f"{peaks[0]}–{peaks[-1]}" + (f" {unit}" if unit else "")
+    return scientific_value(value)
+
+
+def compact_field(field, name=""):
     if not isinstance(field, dict) or field.get("status") != "reported":
         return "<span class='table-empty'>—</span>"
-    return scientific_value(raw(field, "—")) + evidence_link(field.get("evidence_id"))
+    return table_raw(name, field) + evidence_link(field.get("evidence_id"))
 
 
 def record_tag(sample):
@@ -257,26 +309,71 @@ def stacked_entry(sample, value):
     )
 
 
-def aggregate_field(records, group, name, deduplicate=False):
-    entries = []
-    seen = set()
+def record_score(sample, name):
+    conditions = sample.get("conditions", {})
+    temperature = raw(conditions.get("temperature"), "").lower()
+    atmosphere = raw(conditions.get("atmosphere"), "").lower()
+    assignment = short_assignment(raw(sample.get("fields", {}).get("emission_assignment"), ""))
+    score = 0
+    if temperature == "rt" or "room" in temperature:
+        score += 100
+    elif "77" in temperature or "cryogenic" in temperature:
+        score -= 100
+    elif "ambient" in atmosphere:
+        score += 70
+    if name in {"lambda_df", "tau_df", "phi_df"} and assignment == "TADF":
+        score += 60
+    if name in {"lambda_p", "tau_p", "phi_p"} and "RTP" in assignment:
+        score += 40
+    return score
+
+
+def primary_field(records, group, name):
+    candidates = []
     for sample in records:
         field = sample.get(group, {}).get(name)
         if not isinstance(field, dict) or field.get("status") != "reported":
             continue
-        key = (str(field.get("raw_value")), str(field.get("raw_unit")))
-        if deduplicate and key in seen:
-            continue
-        seen.add(key)
-        entries.append((sample, compact_field(field)))
-    if not entries:
+        candidates.append((record_score(sample, name), sample, field))
+    if not candidates:
         return "<span class='table-empty'>—</span>"
-    if len(entries) == 1:
-        return entries[0][1]
-    return "".join(stacked_entry(sample, value) for sample, value in entries)
+    candidates.sort(key=lambda item: item[0], reverse=True)
+    return compact_field(candidates[0][2], name)
 
 
-def data_table(samples):
+def assignment_cell(records):
+    values = []
+    evidence_ids = []
+    for sample in records:
+        field = sample.get("fields", {}).get("emission_assignment")
+        if not isinstance(field, dict) or field.get("status") != "reported":
+            continue
+        value = short_assignment(raw(field, ""))
+        if value not in values:
+            values.append(value)
+            if field.get("evidence_id"):
+                evidence_ids.append(field.get("evidence_id"))
+    if not values:
+        return "<span class='table-empty'>—</span>"
+    return esc("/".join(values)) + "".join(evidence_link(item) for item in evidence_ids)
+
+
+def logic_rows(analysis, colspan):
+    if not isinstance(analysis, dict) or not analysis:
+        return ""
+    stages = [item.get("stage") for item in analysis.get("logic_skeleton", []) if isinstance(item, dict) and item.get("stage")]
+    logic = " → ".join(stages)
+    koi = analysis.get("koi", {})
+    mechanism = analysis_text(koi.get("mechanism"))
+    result = analysis_text(koi.get("key_result"))
+    rows = []
+    if logic:
+        rows.append(f"<tr class='paper-note-row'><td colspan='{colspan}'><b>逻辑骨架：</b>{esc(logic)}</td></tr>")
+    rows.append(f"<tr class='paper-note-row'><td colspan='{colspan}'><b>核心论点：</b>{mechanism}；{result}</td></tr>")
+    return "".join(rows)
+
+
+def data_table(samples, analysis):
     headers = "".join(f"<th>{label}</th>" for _, label, _ in TABLE_COLUMNS)
     grouped = {}
     for sample in samples:
@@ -292,21 +389,23 @@ def data_table(samples):
                 for field in compound_fields:
                     if isinstance(field, dict) and field.get("evidence_id") not in evidence_ids:
                         evidence_ids.append(field.get("evidence_id"))
-                value = esc(compound) + "".join(evidence_link(item) for item in evidence_ids if item)
-            elif group == "identity":
-                value = aggregate_field(records, "identity", name, deduplicate=True)
-            elif group == "condition_summary":
-                value = "".join(stacked_entry(item, condition_summary(item)) for item in records)
+                value = esc(compound) + (evidence_link(evidence_ids[0]) if evidence_ids else "")
+            elif name == "emission_assignment":
+                value = assignment_cell(records)
             else:
-                value = aggregate_field(records, "fields", name)
+                value = primary_field(records, group, name)
             cell_class = "compound-cell" if name == "compound" else ""
             cells.append(f"<td class='{cell_class}'>{value}</td>")
-        row_ids = "".join(f"<span class='record-chip'>{esc(item.get('row_id'))}</span>" for item in records)
-        rows.append(f"<tr><th class='row-key'>{row_ids}</th>{''.join(cells)}</tr>")
+        record_ids = ", ".join(str(item.get("row_id")) for item in records)
+        rows.append(f"<tr title='条件记录：{esc(record_ids)}'>{''.join(cells)}</tr>")
+    innovation = analysis_text(analysis.get("one_sentence_innovation")) if isinstance(analysis, dict) else "未提供"
+    colspan = len(TABLE_COLUMNS)
     return (
         "<div class='data-table-wrap'><table class='data-table'>"
-        f"<thead><tr><th>记录 IDs</th>{headers}</tr></thead>"
-        f"<tbody>{''.join(rows)}</tbody></table></div>"
+        f"<thead><tr>{headers}</tr></thead>"
+        f"<tbody>{logic_rows(analysis, colspan)}{''.join(rows)}"
+        f"<tr class='innovation-row'><td colspan='{colspan}'><b>创新点：</b>{innovation}</td></tr>"
+        "</tbody></table></div>"
     )
 
 
@@ -407,9 +506,9 @@ def main(source_text: str, output_text: str) -> None:
     samples = data.get("samples", [])
     ledger = data.get("evidence_ledger", [])
     paper = data.get("paper", {})
-    table_html = data_table(samples)
-    compound_count = len({raw(item.get("identity", {}).get("compound"), "") for item in samples})
     analysis = data.get("article_analysis", {})
+    table_html = data_table(samples, analysis)
+    compound_count = len({raw(item.get("identity", {}).get("compound"), "") for item in samples})
     review_items = data.get("manual_review", [])
     review_html = "".join(f"<li>{esc(item)}</li>" for item in review_items) or "<li>未列出需人工复核项目</li>"
     title = paper.get("title") or "纯有机长寿命发光证据化抽取报告"
@@ -452,15 +551,17 @@ h1{{max-width:1100px;margin:0;font-size:clamp(25px,3vw,38px);line-height:1.25}}
 .logic-chain b{{font-size:13px}}.logic-chain p{{margin:3px 0 0;color:#435168;font-size:12px}}
 .analysis-missing{{background:#fff;border:1px dashed var(--line);padding:16px;color:var(--muted)}}
 .data-table-wrap{{overflow:auto;background:#fff;border:1px solid #bdc8d6;border-radius:8px;box-shadow:0 4px 14px rgba(24,34,53,.035)}}
-.data-table{{border-collapse:separate;border-spacing:0;min-width:2200px;width:100%;font-size:12px;line-height:1.45}}
+.data-table{{border-collapse:separate;border-spacing:0;min-width:1680px;width:100%;font-size:12px;line-height:1.45}}
 .data-table th,.data-table td{{padding:10px 9px;border-right:1px solid #d6dee8;border-bottom:1px solid #d6dee8;text-align:center;vertical-align:middle;min-width:88px;max-width:230px;overflow-wrap:anywhere}}
 .data-table thead th{{position:sticky;top:0;z-index:3;background:#edf3fa;color:#233a57;font-weight:800;white-space:nowrap}}
 .data-table tr:last-child>*{{border-bottom:0}}.data-table tr>*:last-child{{border-right:0}}
 .data-table tbody tr:nth-child(even) td,.data-table tbody tr:nth-child(even) th{{background:#fafbfd}}
 .data-table tbody tr:hover td,.data-table tbody tr:hover th{{background:#f1f7ff}}
-.data-table .row-key{{position:sticky;left:0;z-index:2;min-width:84px;background:#fff;color:var(--blue);font:750 11px ui-monospace,SFMono-Regular,Consolas,monospace}}
-.data-table .compound-cell{{position:sticky;left:84px;z-index:1;min-width:118px;background:#fff;font-size:14px;font-weight:800;color:#172b4d}}
-.data-table thead th:first-child{{left:0;z-index:5}}.data-table thead th:nth-child(2){{position:sticky;left:84px;z-index:4}}
+.data-table .compound-cell{{position:sticky;left:0;z-index:2;min-width:130px;background:#fff;font-size:14px;font-weight:800;color:#172b4d}}
+.data-table thead th:first-child{{left:0;z-index:5}}
+.paper-note-row td,.innovation-row td{{text-align:left;padding:13px 16px;white-space:normal;max-width:none;background:#fff}}
+.paper-note-row td{{color:#334155}}.paper-note-row b{{color:#172b4d}}
+.innovation-row td{{border-top:2px solid #9fb2c8;background:#fbfcfe;font-size:13px}}.innovation-row b{{color:var(--blue)}}
 .condition-line{{display:block;margin-top:4px;color:#526070}}.table-empty{{color:#a4adba}}
 .stacked-entry{{padding:7px 0;border-bottom:1px dashed #d8e0ea}}.stacked-entry:first-child{{padding-top:0}}.stacked-entry:last-child{{padding-bottom:0;border-bottom:0}}
 .condition-tag{{display:inline-block;margin-bottom:4px;padding:2px 6px;border-radius:999px;background:#e9f1fb;color:#2c5687;font-size:10px;font-weight:800;white-space:nowrap}}
@@ -509,11 +610,7 @@ sub{{font-size:.72em;line-height:0}}
     <dl class="paper-grid">{paper_information(paper)}</dl>
   </section>
   <section class="section">
-    <div class="section-title"><h2>文章 KOI 与逻辑骨架</h2><p>文章级结论只展示一次，并保留证据链接</p></div>
-    {article_analysis_panel(analysis)}
-  </section>
-  <section class="section">
-    <div class="section-title"><h2>主数据表</h2><p>每种化合物一行；不同温度、气氛与发光机制在单元格内分条标注</p></div>
+    <div class="section-title"><h2>主数据表</h2><p>每种化合物一行；主表优先显示室温核心数据，全部条件仍保留在 JSON 与证据台账</p></div>
     {table_html}
   </section>
   <section class="section">
