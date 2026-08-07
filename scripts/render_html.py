@@ -763,12 +763,14 @@ def review_and_evidence_panel(data):
     review_items = data.get("manual_review", [])
     review_html = "".join(f"<li>{scientific_value(item)}</li>" for item in review_items) or "<li>未列出需人工复核项目</li>"
     return (
-        "<section class='audit-section'>"
-        "<div class='section-title'><h2>证据台账与人工复核</h2><p>高置信度证据精简显示；中低置信度保留复核提示</p></div>"
+        "<details class='audit-details'>"
+        f"<summary>证据台账与人工复核 · {len(ledger)} 条证据 · {len(review_items)} 项提醒</summary>"
+        "<div class='audit-details-body'>"
+        "<p class='audit-hint'>高置信度证据精简显示；中低置信度保留复核提示</p>"
         "<div class='audit-panel'>"
         f"<div class='review'><h3>人工复核（{len(review_items)} 项）</h3><ul>{review_html}</ul></div>"
         f"{evidence_list(ledger)}"
-        "</div></section>"
+        "</div></div></details>"
     )
 
 
@@ -846,7 +848,7 @@ a{{color:var(--blue)}}
 .article-info-table tr:last-child>*{{border-bottom:0}}.article-info-table tr>*:last-child{{border-right:0}}
 .article-info-table th{{width:92px;white-space:nowrap;background:#f7f9fc;color:#475569;font-weight:750}}.article-info-table td{{background:#fff}}
 .article-title{{font-weight:850}}.article-doi{{color:#c5162e;font-weight:850}}.article-stats td{{font-weight:800;color:var(--blue)}}
-.article-data-body{{padding:14px}}.data-section{{margin:0}}.audit-section{{margin-top:18px}}.audit-panel{{overflow:hidden;background:#fff;border:1px solid var(--line);border-radius:9px}}
+.article-data-body{{padding:14px}}.data-section{{margin:0}}.audit-details{{margin-top:18px;overflow:hidden;background:#fff;border:1px solid var(--line);border-radius:9px}}.audit-details>summary{{cursor:pointer;padding:12px 14px;background:#f7f9fc;color:#233a57;font-size:12pt;font-weight:800}}.audit-details[open]>summary{{border-bottom:1px solid var(--line)}}.audit-details-body{{padding:0}}.audit-hint{{margin:0;padding:9px 14px;color:var(--muted);border-bottom:1px solid var(--line)}}.audit-panel{{overflow:hidden;background:#fff;border:0;border-radius:0}}
 .audit-panel .review{{border-width:0 0 1px 4px;border-radius:0}}.audit-panel .review h3{{margin:0 0 8px;font-size:12px}}
 .hero{{background:#fff;border:1px solid var(--line);border-top:5px solid var(--blue);border-radius:12px;padding:28px 30px;box-shadow:0 8px 24px rgba(24,34,53,.06)}}
 .eyebrow{{margin:0 0 6px;color:var(--blue);font-weight:700;letter-spacing:.08em}}
@@ -925,6 +927,25 @@ sub{{font-size:.72em;line-height:0}}
 <main class="page">
   {articles_html}
 </main>
+<script>
+function revealEvidenceTarget(id) {{
+  const target = document.getElementById(id);
+  if (!target) return;
+  let container = target.closest("details");
+  while (container) {{
+    container.open = true;
+    container = container.parentElement ? container.parentElement.closest("details") : null;
+  }}
+}}
+document.addEventListener("click", function (event) {{
+  const link = event.target.closest("a.evidence-link");
+  if (link && link.hash) revealEvidenceTarget(decodeURIComponent(link.hash.slice(1)));
+}});
+window.addEventListener("hashchange", function () {{
+  if (location.hash) revealEvidenceTarget(decodeURIComponent(location.hash.slice(1)));
+}});
+if (location.hash) revealEvidenceTarget(decodeURIComponent(location.hash.slice(1)));
+</script>
 </body>
 </html>"""
     Path(output_text).write_text(doc, encoding="utf-8")
