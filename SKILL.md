@@ -1,11 +1,11 @@
 ---
 name: rtp-paper-extractor
-description: Extract evidence-traceable photophysical data from a single pure-organic room-temperature phosphorescence paper PDF and its Supporting Information, then produce validated JSON and an HTML review report. Use for RTP, afterglow, phosphorescence, delayed-emission, PLQY, lifetime, host-matrix, and rate-constant extraction where every reported value must be linked to source evidence.
+description: Extract evidence-traceable photophysical data from a single pure-organic long-lived-emission paper PDF and its Supporting Information, then produce validated JSON and an HTML review report. Use for RTP, phosphorescence, afterglow, delayed fluorescence, TADF, persistent luminescence, PLQY, lifetime, host-matrix, and rate-constant extraction where every reported value must be linked to source evidence.
 ---
 
-# RTP Paper Extractor
+# Pure-Organic Long-Lived Emission Extractor
 
-Extract evidence, not plausible values. Accept one paper PDF and optional SI; write a canonical JSON file and render an HTML audit report from it.
+Extract evidence, not plausible values. Accept one paper PDF and optional SI about a pure-organic long-lived emitter; write a canonical JSON file and render an HTML audit report from it.
 
 ## Required deliverables
 
