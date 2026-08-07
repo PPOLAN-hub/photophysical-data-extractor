@@ -460,7 +460,7 @@ def all_condition_field(records, group, name, registry, labels, maxima):
         entries.append(value + evidence_link(field.get("evidence_id")) + f"<sup class='condition-ref'>[{marker}]</sup>")
     if not entries:
         return "<span class='table-empty'>—</span>"
-    return "<span class='condition-values'>" + " / ".join(entries) + "</span>"
+    return "<span class='condition-values'>" + "<br>".join(entries) + "</span>"
 
 
 def formulation_field(records, name):
@@ -483,7 +483,7 @@ def formulation_field(records, name):
         entries.append(value + evidence_link(field.get("evidence_id")))
     if not entries:
         return "<span class='table-empty'>—</span>"
-    return " / ".join(entries)
+    return "<br>".join(entries)
 
 
 def assignment_cell(records):
@@ -864,17 +864,17 @@ h1{{max-width:1100px;margin:0;font-size:clamp(25px,3vw,38px);line-height:1.25}}
 .logic-chain b{{font-size:13px}}.logic-chain p{{margin:3px 0 0;color:#435168;font-size:12px}}
 .analysis-missing{{background:#fff;border:1px dashed var(--line);padding:16px;color:var(--muted)}}
 .data-table-wrap{{overflow:auto;background:#fff;border:1px solid #bdc8d6;border-radius:8px;box-shadow:0 4px 14px rgba(24,34,53,.035)}}
-.data-table{{border-collapse:separate;border-spacing:0;min-width:1680px;width:100%;font-size:12px;line-height:1.45}}
+.data-table{{border-collapse:separate;border-spacing:0;min-width:1680px;width:100%;font-size:12pt;line-height:1.45}}
 .data-table th,.data-table td{{padding:10px 9px;border-right:1px solid #d6dee8;border-bottom:1px solid #d6dee8;text-align:center;vertical-align:middle;min-width:88px;max-width:230px;overflow-wrap:anywhere}}
-.data-table thead th{{position:sticky;top:0;z-index:3;background:#edf3fa;color:#233a57;font-size:14px;line-height:1.25;font-weight:800;white-space:nowrap}}
+.data-table thead th{{position:sticky;top:0;z-index:3;background:#edf3fa;color:#233a57;font-size:12pt;line-height:1.25;font-weight:800;white-space:nowrap}}
 .data-table tr:last-child>*{{border-bottom:0}}.data-table tr>*:last-child{{border-right:0}}
 .data-table tbody tr:nth-child(even) td,.data-table tbody tr:nth-child(even) th{{background:#fafbfd}}
 .data-table tbody tr:hover td,.data-table tbody tr:hover th{{background:#f1f7ff}}
-.data-table .compound-cell{{position:sticky;left:0;z-index:2;min-width:130px;background:#fff;font-size:14px;font-weight:800;color:#172b4d}}
+.data-table .compound-cell{{position:sticky;left:0;z-index:2;min-width:130px;background:#fff;font-size:12pt;font-weight:800;color:#172b4d}}
 .data-table thead th:first-child{{left:0;z-index:5}}
 .paper-note-row td,.innovation-row td{{text-align:left;padding:13px 16px;white-space:normal;max-width:none;background:#fff}}
 .paper-note-row td{{color:#334155}}.paper-note-row b{{color:#172b4d}}
-.innovation-row td{{border-top:2px solid #9fb2c8;background:#fbfcfe;font-size:13px}}.innovation-row b{{color:var(--blue)}}
+.innovation-row td{{border-top:2px solid #9fb2c8;background:#fbfcfe;font-size:12pt}}.innovation-row b{{color:var(--blue)}}
 .condition-ref{{margin-left:2px;color:#7a4d00;font-size:9px;font-weight:800}}.condition-values{{white-space:normal}}
 .doped-rt-phosphor{{color:#c5162e}}.doped-77k-phosphor{{color:#0000FF}}
 .best-lifetime{{font-weight:850;text-decoration:underline;text-underline-offset:2px}}
