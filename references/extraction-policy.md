@@ -6,6 +6,7 @@
 - Do not equate total PLQY / `phi_pl` with phosphorescence quantum yield `phi_p`.
 - Do not label delayed emission as phosphorescence/RTP unless the authors explicitly assign it or the supplied evidence supports that assignment. Record the author-assigned mechanism as phosphorescence/RTP, delayed fluorescence, TADF, persistent luminescence, or unresolved long-lived emission.
 - Keep fluorescence, delayed fluorescence, TADF, phosphorescence, persistent luminescence, and total PL quantities separate. A paper may contribute more than one mechanism-specific record for the same molecular formulation when sample preparation or measurement conditions differ.
+- Preserve the authors' complete emission assignment in canonical JSON. For the HTML comparison table only, normalize the Type column to `RTP`, `TADF`, `RTP/TADF`, or the fallback `Tranditional-F`; use the fallback only when neither RTP nor TADF is supported.
 - Record all multi-exponential lifetime components plus the reported average and its definition.
 - Preserve source units. A normalized value is optional and must be reproducible from source values.
 - Extract every reported photophysical spectrum, peak, yield, and lifetime for each materially different phase and condition, including solution, doped film, neat film, crystal, powder, aggregate, RT, 77 K, air, inert gas, and vacuum. Do not keep only the headline room-temperature film result.

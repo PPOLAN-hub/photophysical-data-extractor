@@ -227,21 +227,19 @@ TABLE_COLUMNS = [
 ]
 
 
-def short_assignment(value):
+def assignment_categories(value):
     lower = str(value or "").lower()
-    if "fluorescence/phosphorescence" in lower or "dual emission" in lower:
-        return "F/RTP"
-    if "thermally activated delayed fluorescence" in lower or lower.strip() == "tadf":
-        return "TADF"
+    categories = []
     if "phosphor" in lower or "rtp" in lower:
-        return "RTP"
-    if "tadf" in lower:
-        return "TADF"
-    if "delayed fluorescence" in lower:
-        return "DF"
-    if lower.strip() == "fluorescence":
-        return "F"
-    return str(value or "—")
+        categories.append("RTP")
+    if "tadf" in lower or "thermally activated delayed fluorescence" in lower:
+        categories.append("TADF")
+    return categories
+
+
+def short_assignment(value):
+    categories = assignment_categories(value)
+    return "/".join(categories) if categories else "Tranditional-F"
 
 
 def short_host(value):
@@ -489,20 +487,26 @@ def formulation_field(records, name):
 
 
 def assignment_cell(records):
-    values = []
+    categories = []
     evidence_ids = []
+    fallback_evidence_id = None
     for sample in records:
         field = sample.get("fields", {}).get("emission_assignment")
         if not isinstance(field, dict) or field.get("status") != "reported":
             continue
-        value = short_assignment(raw(field, ""))
-        if value not in values:
-            values.append(value)
-            if field.get("evidence_id"):
-                evidence_ids.append(field.get("evidence_id"))
-    if not values:
-        return "<span class='table-empty'>—</span>"
-    return esc("/".join(values)) + "".join(evidence_link(item) for item in evidence_ids)
+        evidence_id = field.get("evidence_id")
+        if fallback_evidence_id is None and evidence_id:
+            fallback_evidence_id = evidence_id
+        detected = assignment_categories(raw(field, ""))
+        for category in ("RTP", "TADF"):
+            if category in detected and category not in categories:
+                categories.append(category)
+                if evidence_id and evidence_id not in evidence_ids:
+                    evidence_ids.append(evidence_id)
+    label = "/".join(categories) if categories else "Tranditional-F"
+    if not evidence_ids and fallback_evidence_id:
+        evidence_ids.append(fallback_evidence_id)
+    return esc(label) + "".join(evidence_link(item) for item in evidence_ids)
 
 
 def logic_rows(analysis, colspan):
