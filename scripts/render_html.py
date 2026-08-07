@@ -377,6 +377,9 @@ def all_condition_field(records, group, name, registry, labels):
         if key in seen:
             continue
         seen.add(key)
+        host = raw(sample.get("identity", {}).get("host_matrix"), "").lower()
+        if name in {"lambda_p", "tau_p", "phi_p"} and "pmma" in host:
+            value = f"<span class='pmma-phosphor-highlight'>{value}</span>"
         entries.append(value + evidence_link(field.get("evidence_id")) + f"<sup class='condition-ref'>[{marker}]</sup>")
     if not entries:
         return "<span class='table-empty'>—</span>"
@@ -637,6 +640,7 @@ h1{{max-width:1100px;margin:0;font-size:clamp(25px,3vw,38px);line-height:1.25}}
 .paper-note-row td{{color:#334155}}.paper-note-row b{{color:#172b4d}}
 .innovation-row td{{border-top:2px solid #9fb2c8;background:#fbfcfe;font-size:13px}}.innovation-row b{{color:var(--blue)}}
 .condition-ref{{margin-left:2px;color:#7a4d00;font-size:9px;font-weight:800}}.condition-values{{white-space:normal}}
+.pmma-phosphor-highlight{{color:#c5162e;font-weight:850}}
 .condition-footnotes td{{text-align:left;max-width:none;padding:12px 16px;background:#fffdf7;color:#5f5335;line-height:1.55}}
 .condition-footnotes div{{display:inline;margin-right:18px}}.condition-footnotes sup{{color:#7a4d00;font-weight:800}}
 .condition-line{{display:block;margin-top:4px;color:#526070}}.table-empty{{color:#a4adba}}
