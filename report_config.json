@@ -1,0 +1,32 @@
+{
+  "physical_quantity_columns": [
+    {"field": "phi_pl", "parts": [{"symbol": "Φ", "subscript": "PL"}]},
+    {"field": "lambda_f", "parts": [{"symbol": "λ", "subscript": "F"}]},
+    {"field": "tau_f", "parts": [{"symbol": "τ", "subscript": "F"}]},
+    {"field": "phi_f", "parts": [{"symbol": "Φ", "subscript": "F"}]},
+    {"field": "lambda_df", "parts": [{"symbol": "λ", "subscript": "DF"}]},
+    {"field": "tau_df", "parts": [{"symbol": "τ", "subscript": "DF"}]},
+    {"field": "lambda_p", "parts": [{"symbol": "λ", "subscript": "P"}]},
+    {"field": "tau_p", "parts": [{"symbol": "τ", "subscript": "P"}]},
+    {"field": "phi_p", "parts": [{"symbol": "Φ", "subscript": "P"}]},
+    {"field": "k_isc", "parts": [{"symbol": "k", "subscript": "ISC"}]},
+    {"field": "k_risc", "parts": [{"symbol": "k", "subscript": "RISC"}]},
+    {
+      "field": "k_rp",
+      "parts": [
+        {"symbol": "k", "subscript": "P"},
+        {"text": "/"},
+        {"symbol": "k", "subscript": "r,P"}
+      ]
+    },
+    {"field": "knr_p", "parts": [{"symbol": "k", "subscript": "nr,P"}]}
+  ],
+  "physical_header_style": {
+    "font_family": "Times New Roman",
+    "font_size": "14pt",
+    "font_weight": 400,
+    "color": "#233A57",
+    "symbol_italic": true,
+    "subscript_italic": false
+  }
+}

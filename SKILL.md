@@ -18,7 +18,9 @@ For a batch, also create `batch_report.json` with a `paper_data_files` list and 
 
 Run `scripts/validate_extraction.py paper_data.json` before rendering. Do not hand-edit `report.html`.
 
-Read `references/extraction-policy.md` and `references/data-schema.md` before extracting. Read `references/html-report-style.md` before rendering the HTML report. For more than one paper, read `references/batch-input.md` and build the manifest before opening PDFs.
+Read `references/extraction-policy.md` and `references/data-schema.md` before extracting. For more than one paper, read `references/batch-input.md` and build the manifest before opening PDFs. For installation, commands, configuration, and troubleshooting, read `references/usage-guide.md`.
+
+Use the bundled `report_config.json` as the default main-table physical-column configuration. The renderer loads it automatically. Users may reorder, remove, relabel, or add supported physical fields and may change the physical-header font style. Pass a separate config as the renderer's optional third argument when the default file should remain unchanged. Read `references/html-report-style.md` only when changing presentation rules or renderer behavior; ordinary rendering does not require loading it into model context.
 
 ## Workflow
 
@@ -36,7 +38,7 @@ Read `references/extraction-policy.md` and `references/data-schema.md` before ex
 2. Run `scripts/build_batch_manifest.py INPUT_DIR batch_manifest.json`; stop on pairing errors.
 3. Process each manifest entry independently. Never carry values, evidence IDs, or SI content from one paper into another.
 4. Write each result under `outputs/<paper_id>/`. Keep Row IDs local; use `<paper_id>:<row_id>` as the global row key when consolidating.
-5. Build `batch_report.json` from the validated per-paper JSON paths and run `scripts/render_html.py batch_report.json batch_report.html`. The renderer namespaces repeated evidence IDs automatically.
+5. Build `batch_report.json` from the validated per-paper JSON paths and run `scripts/render_html.py batch_report.json batch_report.html [custom_report_config.json]`. The renderer namespaces repeated evidence IDs automatically.
 
 ## Evidence rules
 

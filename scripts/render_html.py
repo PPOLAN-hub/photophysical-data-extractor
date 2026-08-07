@@ -206,25 +206,117 @@ def sample_panel(sample):
     )
 
 
-TABLE_COLUMNS = [
+FIXED_TABLE_COLUMNS = [
     ("compound", "化合物", "identity"),
     ("host_matrix", "Host", "identity"),
     ("doping_ratio", "掺杂比例", "identity"),
     ("emission_assignment", "类型", "fields"),
-    ("phi_pl", "<i class='metric-symbol'>Φ</i><sub>PL</sub>", "fields"),
-    ("lambda_f", "<i class='metric-symbol'>λ</i><sub>F</sub>", "fields"),
-    ("tau_f", "<i class='metric-symbol'>τ</i><sub>F</sub>", "fields"),
-    ("phi_f", "<i class='metric-symbol'>Φ</i><sub>F</sub>", "fields"),
-    ("lambda_df", "<i class='metric-symbol'>λ</i><sub>DF</sub>", "fields"),
-    ("tau_df", "<i class='metric-symbol'>τ</i><sub>DF</sub>", "fields"),
-    ("lambda_p", "<i class='metric-symbol'>λ</i><sub>P</sub>", "fields"),
-    ("tau_p", "<i class='metric-symbol'>τ</i><sub>P</sub>", "fields"),
-    ("phi_p", "<i class='metric-symbol'>Φ</i><sub>P</sub>", "fields"),
-    ("k_isc", "<i class='metric-symbol'>k</i><sub>ISC</sub>", "fields"),
-    ("k_risc", "<i class='metric-symbol'>k</i><sub>RISC</sub>", "fields"),
-    ("k_rp", "<i class='metric-symbol'>k</i><sub>P</sub>/<i class='metric-symbol'>k</i><sub>r,P</sub>", "fields"),
-    ("knr_p", "<i class='metric-symbol'>k</i><sub>nr,P</sub>", "fields"),
 ]
+
+SUPPORTED_PHYSICAL_FIELDS = {
+    "phi_pl", "lambda_f", "tau_f", "phi_f", "lambda_df", "tau_df", "phi_df",
+    "lambda_p", "tau_p", "phi_p", "k_isc", "k_risc", "k_rp", "knr_p",
+}
+
+DEFAULT_PHYSICAL_QUANTITY_COLUMNS = [
+    {"field": "phi_pl", "parts": [{"symbol": "Φ", "subscript": "PL"}]},
+    {"field": "lambda_f", "parts": [{"symbol": "λ", "subscript": "F"}]},
+    {"field": "tau_f", "parts": [{"symbol": "τ", "subscript": "F"}]},
+    {"field": "phi_f", "parts": [{"symbol": "Φ", "subscript": "F"}]},
+    {"field": "lambda_df", "parts": [{"symbol": "λ", "subscript": "DF"}]},
+    {"field": "tau_df", "parts": [{"symbol": "τ", "subscript": "DF"}]},
+    {"field": "lambda_p", "parts": [{"symbol": "λ", "subscript": "P"}]},
+    {"field": "tau_p", "parts": [{"symbol": "τ", "subscript": "P"}]},
+    {"field": "phi_p", "parts": [{"symbol": "Φ", "subscript": "P"}]},
+    {"field": "k_isc", "parts": [{"symbol": "k", "subscript": "ISC"}]},
+    {"field": "k_risc", "parts": [{"symbol": "k", "subscript": "RISC"}]},
+    {"field": "k_rp", "parts": [
+        {"symbol": "k", "subscript": "P"}, {"text": "/"}, {"symbol": "k", "subscript": "r,P"}
+    ]},
+    {"field": "knr_p", "parts": [{"symbol": "k", "subscript": "nr,P"}]},
+]
+
+DEFAULT_PHYSICAL_HEADER_STYLE = {
+    "font_family": "Times New Roman",
+    "font_size": "14pt",
+    "font_weight": 400,
+    "color": "#233A57",
+    "symbol_italic": True,
+    "subscript_italic": False,
+}
+
+DEFAULT_REPORT_CONFIG = Path(__file__).resolve().parent.parent / "report_config.json"
+
+
+def metric_label_html(parts, field_name):
+    if not isinstance(parts, list) or not parts:
+        raise ValueError(f"Physical column {field_name!r} needs a non-empty parts list")
+    rendered = []
+    for index, part in enumerate(parts, start=1):
+        if not isinstance(part, dict):
+            raise ValueError(f"Physical column {field_name!r} part {index} must be an object")
+        if "text" in part:
+            rendered.append(esc(part["text"]))
+            continue
+        symbol = part.get("symbol")
+        if not isinstance(symbol, str) or not symbol:
+            raise ValueError(f"Physical column {field_name!r} part {index} needs symbol or text")
+        item = f"<i class='metric-symbol'>{esc(symbol)}</i>"
+        subscript = part.get("subscript")
+        if subscript not in (None, ""):
+            item += f"<sub>{esc(subscript)}</sub>"
+        rendered.append(item)
+    return "".join(rendered)
+
+
+def load_report_config(config_text=None):
+    config_path = Path(config_text) if config_text else DEFAULT_REPORT_CONFIG
+    if config_path.exists():
+        config = json.loads(config_path.read_text(encoding="utf-8"))
+    elif config_text:
+        raise FileNotFoundError(f"Report config not found: {config_path}")
+    else:
+        config = {}
+    if not isinstance(config, dict):
+        raise ValueError("Report config root must be a JSON object")
+
+    physical_columns = config.get("physical_quantity_columns", DEFAULT_PHYSICAL_QUANTITY_COLUMNS)
+    if not isinstance(physical_columns, list):
+        raise ValueError("physical_quantity_columns must be a JSON array")
+    table_columns = list(FIXED_TABLE_COLUMNS)
+    seen = set()
+    for index, item in enumerate(physical_columns, start=1):
+        if not isinstance(item, dict):
+            raise ValueError(f"physical_quantity_columns item {index} must be an object")
+        field_name = item.get("field")
+        if field_name not in SUPPORTED_PHYSICAL_FIELDS:
+            allowed = ", ".join(sorted(SUPPORTED_PHYSICAL_FIELDS))
+            raise ValueError(f"Unsupported physical field {field_name!r}; allowed: {allowed}")
+        if field_name in seen:
+            raise ValueError(f"Duplicate physical field in report config: {field_name}")
+        seen.add(field_name)
+        table_columns.append((field_name, metric_label_html(item.get("parts"), field_name), "fields"))
+
+    style = dict(DEFAULT_PHYSICAL_HEADER_STYLE)
+    custom_style = config.get("physical_header_style", {})
+    if not isinstance(custom_style, dict):
+        raise ValueError("physical_header_style must be a JSON object")
+    unknown_style = set(custom_style) - set(DEFAULT_PHYSICAL_HEADER_STYLE)
+    if unknown_style:
+        raise ValueError("Unknown physical_header_style keys: " + ", ".join(sorted(unknown_style)))
+    style.update(custom_style)
+    if not isinstance(style["font_family"], str) or not re.fullmatch(r"[\w .-]+", style["font_family"]):
+        raise ValueError("physical_header_style.font_family contains unsupported characters")
+    if not isinstance(style["font_size"], str) or not re.fullmatch(r"\d+(?:\.\d+)?(?:px|pt|em|rem)", style["font_size"]):
+        raise ValueError("physical_header_style.font_size must use px, pt, em, or rem")
+    if not isinstance(style["font_weight"], int) or not 100 <= style["font_weight"] <= 900:
+        raise ValueError("physical_header_style.font_weight must be an integer from 100 to 900")
+    if not isinstance(style["color"], str) or not re.fullmatch(r"#[0-9A-Fa-f]{6}", style["color"]):
+        raise ValueError("physical_header_style.color must be a six-digit hex color")
+    for key in ("symbol_italic", "subscript_italic"):
+        if not isinstance(style[key], bool):
+            raise ValueError(f"physical_header_style.{key} must be true or false")
+    return table_columns, style
 
 
 def assignment_categories(value):
@@ -530,10 +622,10 @@ def logic_rows(analysis, colspan):
     return "".join(rows)
 
 
-def data_table(samples, analysis):
+def data_table(samples, analysis, table_columns):
     headers = "".join(
         f"<th class='{'metric-header' if group == 'fields' and name != 'emission_assignment' else ''}'>{label}</th>"
-        for name, label, group in TABLE_COLUMNS
+        for name, label, group in table_columns
     )
     grouped = {}
     for sample in samples:
@@ -545,7 +637,7 @@ def data_table(samples, analysis):
     rows = []
     for compound, records in grouped.items():
         cells = []
-        for name, _, group in TABLE_COLUMNS:
+        for name, _, group in table_columns:
             if name == "compound":
                 compound_fields = [item.get("identity", {}).get("compound") for item in records]
                 evidence_ids = []
@@ -564,7 +656,7 @@ def data_table(samples, analysis):
         record_ids = ", ".join(str(item.get("row_id")) for item in records)
         rows.append(f"<tr title='条件记录：{esc(record_ids)}'>{''.join(cells)}</tr>")
     innovation = analysis_text(analysis.get("one_sentence_innovation")) if isinstance(analysis, dict) else "未提供"
-    colspan = len(TABLE_COLUMNS)
+    colspan = len(table_columns)
     footnotes = "".join(
         f"<div><sup>[{esc(marker)}]</sup> {esc(description)}</div>"
         for marker, description in condition_labels
@@ -774,7 +866,7 @@ def review_and_evidence_panel(data):
     )
 
 
-def article_block(data, batch_mode, index):
+def article_block(data, batch_mode, index, table_columns):
     paper = data.get("paper", {})
     paper_id = str(paper.get("paper_id") or f"P{index:03d}")
     safe_article_id = re.sub(r"[^A-Za-z0-9_-]+", "-", paper_id).strip("-") or f"P{index:03d}"
@@ -792,7 +884,7 @@ def article_block(data, batch_mode, index):
         "<div class='article-data-body'>"
         "<section class='data-section'>"
         "<div class='section-title'><h2>主数据表</h2><p>每种化合物一行；RT/77 K、薄膜/溶液等条件以脚注区分</p></div>"
-        f"{data_table(samples, analysis)}</section>"
+        f"{data_table(samples, analysis, table_columns)}</section>"
         f"{review_and_evidence_panel(working_data)}"
         "</div></details></article>"
     )
@@ -815,7 +907,7 @@ def load_documents(source):
     return [payload]
 
 
-def main(source_text: str, output_text: str) -> None:
+def main(source_text: str, output_text: str, config_text=None) -> None:
     source = Path(source_text)
     documents = load_documents(source)
     if not documents:
@@ -825,7 +917,13 @@ def main(source_text: str, output_text: str) -> None:
         f"批量文献数据抽取报告（{len(documents)} 篇）"
         if batch_mode else documents[0].get("paper", {}).get("title") or "纯有机长寿命发光证据化抽取报告"
     )
-    articles_html = "".join(article_block(item, batch_mode, index) for index, item in enumerate(documents, start=1))
+    table_columns, metric_header_style = load_report_config(config_text)
+    articles_html = "".join(
+        article_block(item, batch_mode, index, table_columns)
+        for index, item in enumerate(documents, start=1)
+    )
+    metric_symbol_style = "italic" if metric_header_style["symbol_italic"] else "normal"
+    metric_subscript_style = "italic" if metric_header_style["subscript_italic"] else "normal"
     doc = f"""<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
@@ -879,7 +977,7 @@ h1{{max-width:1100px;margin:0;font-size:clamp(25px,3vw,38px);line-height:1.25}}
 .data-table{{border-collapse:separate;border-spacing:0;min-width:1680px;width:100%;font-size:12pt;line-height:1.45}}
 .data-table th,.data-table td{{padding:10px 9px;border-right:1px solid #d6dee8;border-bottom:1px solid #d6dee8;text-align:center;vertical-align:middle;min-width:88px;max-width:230px;overflow-wrap:anywhere}}
 .data-table thead th{{position:sticky;top:0;z-index:3;background:#edf3fa;color:#233a57;font-size:12pt;line-height:1.25;font-weight:800;white-space:nowrap}}
-.data-table thead th.metric-header{{font-family:"Times New Roman",Times,serif;font-size:14pt;font-weight:400}}.metric-header .metric-symbol{{font-style:italic;font-weight:400}}.metric-header sub{{font-style:normal;font-weight:400}}
+.data-table thead th.metric-header{{font-family:"{metric_header_style['font_family']}",serif;font-size:{metric_header_style['font_size']};font-weight:{metric_header_style['font_weight']};color:{metric_header_style['color']}}}.metric-header .metric-symbol{{font-style:{metric_symbol_style};font-weight:{metric_header_style['font_weight']}}}.metric-header sub{{font-style:{metric_subscript_style};font-weight:{metric_header_style['font_weight']}}}
 .data-table tr:last-child>*{{border-bottom:0}}.data-table tr>*:last-child{{border-right:0}}
 .data-table tbody tr:nth-child(even) td,.data-table tbody tr:nth-child(even) th{{background:#fafbfd}}
 .data-table tbody tr:hover td,.data-table tbody tr:hover th{{background:#f1f7ff}}
@@ -952,6 +1050,6 @@ if (location.hash) revealEvidenceTarget(decodeURIComponent(location.hash.slice(1
 
 
 if __name__ == "__main__":
-    if len(sys.argv) != 3:
-        raise SystemExit("Usage: render_html.py paper_data.json report.html")
-    main(sys.argv[1], sys.argv[2])
+    if len(sys.argv) not in {3, 4}:
+        raise SystemExit("Usage: render_html.py paper_data.json report.html [report_config.json]")
+    main(sys.argv[1], sys.argv[2], sys.argv[3] if len(sys.argv) == 4 else None)
