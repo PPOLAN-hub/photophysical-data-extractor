@@ -68,7 +68,7 @@ npx skills add PPOLAN-hub/photophysical-data-extractor --skill photophysical-dat
 
 Cherry Studio 1.9.12 或更新版本支持界面安装，无需命令行。请下载已经打包并测试的专用文件：
 
-[下载 photophysical-data-extractor-cherry-studio.zip](https://github.com/PPOLAN-hub/photophysical-data-extractor/releases/latest/download/photophysical-data-extractor-cherry-studio.zip)
+[下载 photophysical-data-extractor-skill-v1.0.1.zip](https://github.com/PPOLAN-hub/photophysical-data-extractor/releases/latest/download/photophysical-data-extractor-skill-v1.0.1.zip)
 
 1. 使用有权限的 GitHub 账号下载上述 ZIP；
 2. 打开 Cherry Studio 的 `设置 → 技能`；
