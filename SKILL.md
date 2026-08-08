@@ -1,6 +1,6 @@
 ---
 name: photophysical-data-extractor
-description: Extract evidence-traceable photophysical data, article KOI, innovation, and logical structure from organic-material paper PDFs and their Supporting Information, then automatically produce validated JSON and HTML review reports. Invoke for one paper whenever the user says "PDE" and for multiple papers whenever the user says "PDEmore". Also use for fluorescence, phosphorescence, RTP, afterglow, delayed fluorescence, TADF, persistent luminescence, PLQY, lifetime, spectra, host-matrix, rate constants, deterministic main-SI pairing, and batch literature organization where every value or synthesized claim must link to source evidence.
+description: Extract evidence-traceable photophysical and electronic-structure data, article KOI, innovation, and logical structure from organic-material paper PDFs and their Supporting Information, then automatically produce validated JSON and HTML review reports. Invoke for one paper whenever the user says "PDE" and for multiple papers whenever the user says "PDEmore". Also use for fluorescence, phosphorescence, RTP, afterglow, delayed fluorescence, TADF, persistent luminescence, PLQY, lifetime, spectra, host-matrix, HOMO, LUMO, S1/T1 energies, singlet-triplet gaps, rate constants, deterministic main-SI pairing, and batch literature organization where every value or synthesized claim must link to source evidence.
 ---
 
 # Photophysical Data Extractor
@@ -22,7 +22,7 @@ Create these files beside the input paper:
 
 For a batch, also create `batch_report.json` with a `paper_data_files` list and render one consolidated `batch_report.html` after every per-paper JSON passes validation.
 
-Run `scripts/validate_extraction.py paper_data.json` before rendering and `scripts/validate_report_html.py paper_data.json report.html` after rendering. Do not hand-edit or independently recreate `report.html`; always use the bundled renderer so display rules remain deterministic.
+Run `scripts/validate_extraction.py paper_data.json` before rendering and `scripts/validate_report_html.py paper_data.json report.html [custom_report_config.json]` after rendering. Pass the same optional config to the renderer and HTML validator. Do not hand-edit or independently recreate `report.html`; always use the bundled renderer so display rules remain deterministic.
 
 Read `references/extraction-policy.md` and `references/data-schema.md` before extracting. For more than one paper, read `references/batch-input.md` and build the manifest before opening PDFs. For installation, commands, configuration, and troubleshooting, read `references/usage-guide.md`.
 
@@ -31,9 +31,9 @@ Use the bundled `report_config.json` as the default main-table physical-column c
 ## Workflow
 
 1. Confirm the supplied main PDF and whether SI is supplied. Record coverage; never claim SI was reviewed if unavailable.
-2. Read the paper and SI in full enough to locate relevant text, tables, captions, and measurement conditions. Search the keywords in the policy, then inspect every candidate source location.
+2. Read the paper and SI in full enough to locate relevant text, tables, captions, electrochemistry, theoretical-calculation sections, and measurement conditions. Search the keywords in the policy, then inspect every candidate source location.
 3. Define one record per unique test sample and condition. Do not merge measurements across compound, host/matrix or solvent, concentration, state, atmosphere, temperature, excitation, delay, or gate window. Extract all reported solution/film/crystal/powder and RT/77 K records, not only the headline ambient result.
-4. Add field-level evidence before adding a specific value, including compound, host/matrix, concentration, sample state, and every measurement condition. Use short quotes and a resolvable page/table/figure/SI location.
+4. Add field-level evidence before adding a specific value, including compound, host/matrix, concentration, sample state, and every measurement condition. Extract HOMO, LUMO, S1, T1, and ΔEST when reported; separate experimental and calculated values and retain their method/medium. Use short quotes and a resolvable page/table/figure/SI location.
 5. Extract paper-level KOI, a one-sentence innovation, and a problem-to-application logic skeleton. Store these once under `article_analysis`; link every synthesized item to paper-level evidence with `row_id: PAPER`.
 6. Mark missing information with a status, not a guessed value. Record cross-source conflicts and manual-review items.
 7. Validate JSON and render HTML. In the main table, show each solid formulation's Host and doping ratio once; keep solution solvent/concentration out of those two cells and identify solution, RT/77 K, and doped-film conditions through metric footnotes. For doped-matrix phosphorescence values, render room-temperature λP, τP, and ΦP in `#D9001B`; render 77 K counterparts in `#0000FF`; bold and underline the longest room-temperature τP and highest room-temperature ΦP, and bold the longest 77 K τP. Treat `RT`, `RT (ambient)`, `room temperature`, `ambient temperature`, `室温`, and 293/298/300 K as room temperature. Run the HTML validator and report the output paths.

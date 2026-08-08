@@ -1,5 +1,10 @@
 {
   "physical_quantity_columns": [
+    {"field": "e_homo", "parts": [{"symbol": "E", "subscript": "HOMO"}]},
+    {"field": "e_lumo", "parts": [{"symbol": "E", "subscript": "LUMO"}]},
+    {"field": "e_s1", "parts": [{"symbol": "E", "subscript": "S1"}]},
+    {"field": "e_t1", "parts": [{"symbol": "E", "subscript": "T1"}]},
+    {"field": "delta_e_st", "parts": [{"symbol": "ΔE", "subscript": "ST"}]},
     {"field": "phi_pl", "parts": [{"symbol": "Φ", "subscript": "PL"}]},
     {"field": "lambda_f", "parts": [{"symbol": "λ", "subscript": "F"}]},
     {"field": "tau_f", "parts": [{"symbol": "τ", "subscript": "F"}]},

@@ -2,7 +2,7 @@
 
 ## 1. 这是什么
 
-`photophysical-data-extractor` 是面向有机材料光物理文献的 Agent Skill，覆盖荧光、磷光/RTP、延迟荧光/TADF、余辉及相关速率常数。它负责指导智能体从论文正文和 Supporting Information（SI）中抽取可溯源数据，生成：
+`photophysical-data-extractor` 是面向有机材料光物理与电子结构文献的 Agent Skill，覆盖 HOMO/LUMO、S1/T1/ΔEST、荧光、磷光/RTP、延迟荧光/TADF、余辉及相关速率常数。它负责指导智能体从论文正文和 Supporting Information（SI）中抽取可溯源数据，生成：
 
 - `paper_data.json`：机器可读、可校验的唯一数据源；
 - `report.html`：供阅读、比较和人工复核的网页报告；
@@ -104,6 +104,12 @@ P03.pdf  对应  S03.pdf
 | 字段 | 含义 |
 |---|---|
 | `phi_pl` | 总光致发光量子效率 |
+| `e_homo` | HOMO 能级（实验/计算分开记录） |
+| `e_lumo` | LUMO 能级（实验/计算分开记录） |
+| `e_s1` | 第一激发单重态 S1 能级 |
+| `e_t1` | 第一激发三重态 T1 能级 |
+| `delta_e_st` | S1–T1 能级差 ΔEST |
+| `e_t2` | T2 能级；可选字段，默认表头不显示 |
 | `lambda_f` | 荧光发射位置 |
 | `tau_f` | 荧光寿命 |
 | `phi_f` | 荧光量子效率 |

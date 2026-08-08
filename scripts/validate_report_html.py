@@ -45,13 +45,21 @@ def has_value_class(source, class_name):
     return re.search(pattern, source) is not None
 
 
-def main(json_path, html_path):
+def main(json_path, html_path, config_path=None):
     source_path = Path(json_path)
     report_path = Path(html_path)
     documents = render_html.load_documents(source_path)
     source = report_path.read_text(encoding="utf-8")
     expected = expected_highlights(documents)
     problems = []
+
+    table_columns, _ = render_html.load_report_config(config_path)
+    for name, label, group in table_columns:
+        if group != "fields" or name == "emission_assignment":
+            continue
+        expected_header = f"<th class='metric-header'>{label}</th>"
+        if expected_header not in source:
+            problems.append(f"missing configured physical table header: {name}")
 
     if '<meta name="pde-renderer" content="photophysical-data-extractor">' not in source:
         problems.append("report was not produced by the bundled PDE renderer")
@@ -79,6 +87,6 @@ def main(json_path, html_path):
 
 
 if __name__ == "__main__":
-    if len(sys.argv) != 3:
-        raise SystemExit("Usage: validate_report_html.py paper_data.json report.html")
-    main(sys.argv[1], sys.argv[2])
+    if len(sys.argv) not in {3, 4}:
+        raise SystemExit("Usage: validate_report_html.py paper_data.json report.html [report_config.json]")
+    main(sys.argv[1], sys.argv[2], sys.argv[3] if len(sys.argv) == 4 else None)

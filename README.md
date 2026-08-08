@@ -1,6 +1,6 @@
 # Photophysical Data Extractor
 
-面向有机材料光物理论文的证据可溯源数据抽取 Skill，简称 **PDE**。
+面向有机材料光物理与电子结构论文的证据可溯源数据抽取 Skill，简称 **PDE**。除发光光谱、寿命和效率外，默认抽取并显示 HOMO、LUMO、S1、T1 与 ΔEST。
 
 单篇论文上传正文及 Supporting Information（SI）后，输入 `PDE` 即可；多篇论文使用 `PDEmore`。Agent 会自动完成论文读取、数据抽取、证据关联、JSON 校验和 HTML 报告生成；用户不需要手工执行脚本或自行制作 HTML。
 
@@ -68,7 +68,7 @@ npx skills add PPOLAN-hub/photophysical-data-extractor --skill photophysical-dat
 
 Cherry Studio 1.9.12 或更新版本支持界面安装，无需命令行。请下载已经打包并测试的专用文件：
 
-[下载 photophysical-data-extractor-skill-v1.2.0.zip](https://github.com/PPOLAN-hub/photophysical-data-extractor/releases/latest/download/photophysical-data-extractor-skill-v1.2.0.zip)
+[下载 photophysical-data-extractor-skill-v1.3.0.zip](https://github.com/PPOLAN-hub/photophysical-data-extractor/releases/latest/download/photophysical-data-extractor-skill-v1.3.0.zip)
 
 1. 使用有权限的 GitHub 账号下载上述 ZIP；
 2. 打开 Cherry Studio 的 `设置 → 技能`；
@@ -130,6 +130,7 @@ P03.pdf  对应  S03.pdf
 |---|---|
 | 样品身份 | 化合物、Host/Matrix、掺杂比例、溶剂、浓度、薄膜/晶体/粉末等状态 |
 | 测试条件 | 温度、气氛、激发波长、延迟时间、门控窗口、是否脱氧 |
+| 电子与激发态能级 | HOMO、LUMO、E(S1)、E(T1)、ΔEST；实验值与计算值分行并保留方法 |
 | 总发光 | ΦPL |
 | 荧光 | λF、τF、ΦF |
 | 延迟荧光 | λDF、τDF、ΦDF、TADF 归属 |
@@ -164,6 +165,7 @@ P03.pdf  对应  S03.pdf
 phi_pl, lambda_f, tau_f, phi_f,
 lambda_df, tau_df, phi_df,
 lambda_p, tau_p, phi_p,
+e_homo, e_lumo, e_s1, e_t1, delta_e_st, e_t2,
 k_isc, k_risc, k_rp, knr_p
 ```
 

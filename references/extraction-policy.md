@@ -11,6 +11,9 @@
 - Preserve source units. A normalized value is optional and must be reproducible from source values.
 - Extract every reported photophysical spectrum, peak, yield, and lifetime for each materially different phase and condition, including solution, doped film, neat film, crystal, powder, aggregate, RT, 77 K, air, inert gas, and vacuum. Do not keep only the headline room-temperature film result.
 - Treat solution fluorescence at RT and solution phosphorescence at 77 K as separate evidence-bearing records when reported. Record solvent and concentration in `host_matrix` and `doping_ratio`, respectively.
+- Extract HOMO, LUMO, S1, T1, and the S1–T1 energy gap whenever reported. Search both experimental/electrochemical sections and theoretical-calculation tables or figures. Keep experimental and calculated values on separate records and label the determination method, computational level, and medium in `measurement_context`.
+- Do not calculate `delta_e_st` from energy values obtained with different methods, media, geometries, or phases. When the paper does not explicitly report the gap, calculate `E(S1) - E(T1)` only from a matched pair, use evidence type `calculated_from_reported_values`, and state the formula plus both input evidence IDs.
+- Do not treat an optical gap, oxidation-derived HOMO, calculated orbital energy, or excited-state energy as interchangeable. Preserve the sign of HOMO/LUMO energies and the author's state character such as `1CT`, `1LE`, or `3LE` in `measurement_context` or notes.
 
 ## Evidence location format
 
@@ -28,7 +31,7 @@ Keep the ledger compact. For high-confidence table evidence, put the exact table
 
 ## Search terms
 
-Search at minimum: `room-temperature phosphorescence`, `RTP`, `organic phosphorescence`, `afterglow`, `persistent luminescence`, `delayed emission`, `delayed fluorescence`, `TADF`, `long-lived emission`, `lifetime`, `transient`, `time-resolved`, `PLQY`, `quantum yield`, `host`, `matrix`, `doped`, `air`, `nitrogen`, `oxygen`, `vacuum`, `77 K`, `excitation`, `delay`, `gate`, `kISC`, `kRISC`, `kr`, and `knr`.
+Search at minimum: `room-temperature phosphorescence`, `RTP`, `organic phosphorescence`, `afterglow`, `persistent luminescence`, `delayed emission`, `delayed fluorescence`, `TADF`, `long-lived emission`, `lifetime`, `transient`, `time-resolved`, `PLQY`, `quantum yield`, `host`, `matrix`, `doped`, `air`, `nitrogen`, `oxygen`, `vacuum`, `77 K`, `excitation`, `delay`, `gate`, `HOMO`, `LUMO`, `energy level`, `singlet`, `triplet`, `S1`, `T1`, `ΔEST`, `energy gap`, `cyclic voltammetry`, `DFT`, `TD-DFT`, `NTO`, `kISC`, `kRISC`, `kr`, and `knr`.
 
 ## Required manual-review items
 

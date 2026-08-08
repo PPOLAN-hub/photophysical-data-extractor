@@ -33,6 +33,12 @@ FIELD_LABELS = {
     "lambda_p": "λ<sub>P</sub>",
     "tau_p": "τ<sub>P</sub>",
     "phi_p": "Φ<sub>P</sub>",
+    "e_homo": "E<sub>HOMO</sub>",
+    "e_lumo": "E<sub>LUMO</sub>",
+    "e_s1": "E<sub>S1</sub>",
+    "e_t1": "E<sub>T1</sub>",
+    "e_t2": "E<sub>T2</sub>",
+    "delta_e_st": "ΔE<sub>ST</sub>",
     "k_isc": "k<sub>ISC</sub>",
     "k_risc": "k<sub>RISC</sub>",
     "k_rp": "k<sub>P</sub>/k<sub>r,P</sub>",
@@ -53,6 +59,7 @@ METRIC_ORDER = [
     "lambda_f", "tau_f", "phi_f",
     "lambda_df", "tau_df", "phi_df",
     "lambda_p", "tau_p", "phi_p",
+    "e_homo", "e_lumo", "e_s1", "e_t1", "e_t2", "delta_e_st",
     "afterglow_color", "afterglow_visible_time", "phi_pl",
     "k_isc", "k_risc", "k_rp", "knr_p",
 ]
@@ -216,9 +223,15 @@ FIXED_TABLE_COLUMNS = [
 SUPPORTED_PHYSICAL_FIELDS = {
     "phi_pl", "lambda_f", "tau_f", "phi_f", "lambda_df", "tau_df", "phi_df",
     "lambda_p", "tau_p", "phi_p", "k_isc", "k_risc", "k_rp", "knr_p",
+    "e_homo", "e_lumo", "e_s1", "e_t1", "e_t2", "delta_e_st",
 }
 
 DEFAULT_PHYSICAL_QUANTITY_COLUMNS = [
+    {"field": "e_homo", "parts": [{"symbol": "E", "subscript": "HOMO"}]},
+    {"field": "e_lumo", "parts": [{"symbol": "E", "subscript": "LUMO"}]},
+    {"field": "e_s1", "parts": [{"symbol": "E", "subscript": "S1"}]},
+    {"field": "e_t1", "parts": [{"symbol": "E", "subscript": "T1"}]},
+    {"field": "delta_e_st", "parts": [{"symbol": "ΔE", "subscript": "ST"}]},
     {"field": "phi_pl", "parts": [{"symbol": "Φ", "subscript": "PL"}]},
     {"field": "lambda_f", "parts": [{"symbol": "λ", "subscript": "F"}]},
     {"field": "tau_f", "parts": [{"symbol": "τ", "subscript": "F"}]},
@@ -422,11 +435,11 @@ def stacked_entry(sample, value):
     )
 
 
-def condition_descriptor(sample):
+def condition_descriptor(sample, field=None):
     identity = sample.get("identity", {})
     conditions = sample.get("conditions", {})
-    host_full = raw(identity.get("host_matrix"), "未报告介质")
-    host = short_host(host_full)
+    host_full = raw(identity.get("host_matrix"), "")
+    host = short_host(host_full) if host_full else ""
     ratio = raw(identity.get("doping_ratio"), "")
     state = raw(identity.get("sample_state"), "")
     temperature = raw(conditions.get("temperature"), "")
@@ -443,6 +456,8 @@ def condition_descriptor(sample):
             parts.append("溶液")
         elif "film" in state_lower:
             parts.append("薄膜")
+        else:
+            parts.append(state)
     if "pva" in host_full.lower() and "oxygen" in host_full.lower():
         parts.append("PVA 阻氧层")
     if temperature:
@@ -451,11 +466,22 @@ def condition_descriptor(sample):
         parts.append(atmosphere)
     if excitation:
         parts.append("λex=" + excitation)
+    context = field.get("measurement_context") if isinstance(field, dict) else None
+    if isinstance(context, dict):
+        determination = str(context.get("determination") or "").strip().lower()
+        if determination == "experimental":
+            parts.append("实验")
+        elif determination == "calculated":
+            parts.append("计算")
+        for key in ("method", "medium", "phase", "state_character"):
+            value = str(context.get(key) or "").strip()
+            if value and value.lower() not in "；".join(parts).lower():
+                parts.append(value)
     return "；".join(parts) or "条件未完整报告"
 
 
-def condition_marker(sample, registry, labels):
-    description = condition_descriptor(sample)
+def condition_marker(sample, registry, labels, field=None):
+    description = condition_descriptor(sample, field)
     if description not in registry:
         index = len(registry)
         marker = chr(ord("a") + index) if index < 26 else f"a{index + 1}"
@@ -566,7 +592,7 @@ def all_condition_field(records, group, name, registry, labels, maxima):
         field = sample.get(group, {}).get(name)
         if not isinstance(field, dict) or field.get("status") != "reported":
             continue
-        marker = condition_marker(sample, registry, labels)
+        marker = condition_marker(sample, registry, labels, field)
         value = table_raw(name, field)
         key = (re.sub(r"<[^>]+>", "", value), marker)
         if key in seen:
@@ -608,7 +634,8 @@ def formulation_field(records, name):
     for sample in records:
         identity = sample.get("identity", {})
         sample_state = raw(identity.get("sample_state"), "").lower()
-        if "solution" in sample_state or "溶液" in sample_state:
+        solid_tokens = ("film", "doped", "blend", "matrix", "solid", "crystal", "powder", "aggregate", "薄膜", "掺杂", "固态", "晶体", "粉末", "聚集")
+        if not any(token in sample_state for token in solid_tokens):
             continue
         field = identity.get(name)
         if not isinstance(field, dict) or field.get("status") != "reported":

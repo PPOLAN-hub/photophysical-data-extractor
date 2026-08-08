@@ -6,6 +6,7 @@ from pathlib import Path
 
 VALID_TYPES = {"direct_text", "table_value", "figure_estimate", "calculated_from_reported_values", "author_assignment"}
 VALID_STATUS = {"reported", "not_reported", "uncertain"}
+ENERGY_FIELDS = {"e_homo", "e_lumo", "e_s1", "e_t1", "e_t2", "delta_e_st"}
 
 
 def validate_analysis_item(label, item, ledger, problems):
@@ -59,6 +60,13 @@ def main(path_text: str) -> int:
                     field_name = evidence.get("field_name", "").lower()
                     if "phosphor" not in quote and "rtp" not in quote and "tau_p" not in field_name and "τp" not in quote:
                         problems.append(f"{row_id}.tau_p: evidence must explicitly identify phosphorescence/RTP or tau_p")
+                if name in ENERGY_FIELDS and status == "reported":
+                    context = field.get("measurement_context")
+                    determination = str(context.get("determination", "")).lower() if isinstance(context, dict) else ""
+                    if determination not in {"experimental", "calculated"}:
+                        problems.append(f"{row_id}.{name}: measurement_context.determination must be experimental or calculated")
+                    if not str(field.get("raw_unit") or "").strip():
+                        problems.append(f"{row_id}.{name}: reported energy needs raw_unit")
     analysis = data.get("article_analysis")
     if analysis is not None:
         if not isinstance(analysis, dict):
