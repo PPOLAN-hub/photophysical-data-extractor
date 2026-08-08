@@ -9,6 +9,10 @@ Extract evidence, not plausible values. Accept one organic photophysical paper P
 
 Treat `PDE` as the single-paper invocation keyword. A single-paper upload may contain a main PDF plus one SI PDF with arbitrary filenames; treat them as one article set, distinguish main and SI from their document contents, and do not ask the user to rename or pair them. Treat `PDEmore` as the multi-paper invocation keyword and apply the deterministic batch naming rules below. Once invoked, complete extraction, JSON validation, and HTML rendering autonomously. Never ask the user to run validator or renderer commands.
 
+## Python runtime
+
+Require Python 3.9 or newer. Resolve the interpreter from `runtime_config.json` in order, skipping paths or commands that do not exist. This machine is configured to prefer `D:\Tool\Pathon\python.exe`; portable fallbacks cover a Skill-local `.venv`, `py -3`, and `python3`. Never invoke bare `python` on Windows because it may be the Microsoft Store placeholder. Run `scripts/check_environment.py` with the selected interpreter and proceed only when it reports `ready: true`. Do not silently fall back to Python 3.8 or older. If no compatible runtime exists, report the missing runtime instead of asking the user to run the renderer manually.
+
 ## Required deliverables
 
 Create these files beside the input paper:

@@ -68,7 +68,7 @@ npx skills add PPOLAN-hub/photophysical-data-extractor --skill photophysical-dat
 
 Cherry Studio 1.9.12 或更新版本支持界面安装，无需命令行。请下载已经打包并测试的专用文件：
 
-[下载 photophysical-data-extractor-skill-v1.0.1.zip](https://github.com/PPOLAN-hub/photophysical-data-extractor/releases/latest/download/photophysical-data-extractor-skill-v1.0.1.zip)
+[下载 photophysical-data-extractor-skill-v1.1.0.zip](https://github.com/PPOLAN-hub/photophysical-data-extractor/releases/latest/download/photophysical-data-extractor-skill-v1.1.0.zip)
 
 1. 使用有权限的 GitHub 账号下载上述 ZIP；
 2. 打开 Cherry Studio 的 `设置 → 技能`；
@@ -201,9 +201,12 @@ k_isc, k_risc, k_rp, knr_p
 
 ## 环境说明
 
-- Python 3.9 或更高版本；
+- Python 3.9 或更高版本；解释器候选顺序记录在 `runtime_config.json`；
 - Agent 必须能够读取论文文件、写入输出目录并运行 Skill 自带脚本；
-- 推荐安装 `pypdf`、`PyMuPDF` 和 `PyYAML`；
+- 本机已配置优先使用 `D:\Tool\Pathon\python.exe`（Python 3.13.7）；若其他电脑不存在该路径，会自动尝试 Skill 内 `.venv`、`py -3` 或 `python3`；
+- 兼容依赖范围记录在 `requirements.txt`；当前实测环境为 `pypdf 6.10.2`、`PyMuPDF 1.27.2.2`、`PyYAML 6.0.3`；
+- Agent 应先运行 `scripts/check_environment.py` 自动检查解释器和依赖，不要求用户手工选择 Python；
+- Windows 下不得直接调用裸 `python`，以免命中无功能的 Microsoft Store 占位符；
 - 扫描版 PDF 或图片型表格可能需要 OCR 或视觉模型。
 
 无论使用 Codex、Claude、Kimi、DeepSeek 或其他模型，都应保留 JSON 校验、证据链接及中低置信度人工复核。上传论文到云端模型前，请自行核对版权、保密和数据处理政策。

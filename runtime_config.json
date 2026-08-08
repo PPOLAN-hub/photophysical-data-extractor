@@ -1,0 +1,33 @@
+{
+  "minimum_python": "3.9",
+  "interpreter_candidates": [
+    {
+      "platform": "windows",
+      "path": "D:\\Tool\\Pathon\\python.exe",
+      "scope": "configured_for_this_machine"
+    },
+    {
+      "platform": "windows",
+      "path": ".venv\\Scripts\\python.exe",
+      "relative_to": "skill_directory"
+    },
+    {
+      "platform": "windows",
+      "command": "py",
+      "arguments": ["-3"]
+    },
+    {
+      "platform": "macos_linux",
+      "path": ".venv/bin/python",
+      "relative_to": "skill_directory"
+    },
+    {
+      "platform": "macos_linux",
+      "command": "python3"
+    }
+  ],
+  "environment_check": "scripts/check_environment.py",
+  "requirements": "requirements.txt",
+  "windows_disallowed_commands": ["python"],
+  "optional_external_tools": ["pdftoppm"]
+}

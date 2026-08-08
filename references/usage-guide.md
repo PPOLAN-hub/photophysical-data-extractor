@@ -18,11 +18,13 @@
 - 一个能够读取本地文件、运行 Python 命令并加载 `SKILL.md` 的 Agent；
 - 可检索文本的论文 PDF，以及可选的 SI PDF。
 
-渲染器、校验器和批量清单脚本只使用 Python 标准库。为了提高 PDF 文字、页码和表格定位能力，建议在 Agent 使用的同一 Python 环境安装：
+渲染器、校验器和批量清单脚本只使用 Python 标准库。PDF 读取依赖记录在 `requirements.txt`；需要补齐时由 Agent 使用已选解释器自动安装：
 
 ```powershell
-python -m pip install pypdf PyMuPDF PyYAML
+<selected-python> -m pip install -r requirements.txt
 ```
+
+Agent 应按 `runtime_config.json` 顺序选择解释器，然后自动运行 `scripts/check_environment.py`。本机优先使用 `D:\Tool\Pathon\python.exe`；其他电脑会跳过不存在的机器专用路径并尝试可移植候选。Windows 下不要调用裸 `python`，因为它可能是 Microsoft Store 占位符。不得静默使用 Python 3.8 或更早版本，也不得把环境检查、JSON 校验或 HTML 渲染转交给用户手工执行。
 
 ### 安装 Skill
 
