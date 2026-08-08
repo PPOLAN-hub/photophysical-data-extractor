@@ -68,7 +68,7 @@ npx skills add PPOLAN-hub/photophysical-data-extractor --skill photophysical-dat
 
 Cherry Studio 1.9.12 或更新版本支持界面安装，无需命令行。请下载已经打包并测试的专用文件：
 
-[下载 photophysical-data-extractor-skill-v1.1.0.zip](https://github.com/PPOLAN-hub/photophysical-data-extractor/releases/latest/download/photophysical-data-extractor-skill-v1.1.0.zip)
+[下载 photophysical-data-extractor-skill-v1.2.0.zip](https://github.com/PPOLAN-hub/photophysical-data-extractor/releases/latest/download/photophysical-data-extractor-skill-v1.2.0.zip)
 
 1. 使用有权限的 GitHub 账号下载上述 ZIP；
 2. 打开 Cherry Studio 的 `设置 → 技能`；
@@ -144,7 +144,7 @@ P03.pdf  对应  S03.pdf
 
 - 每种化合物在主表中只显示一行；不同测试条件在同一单元格中换行并以脚注区分；
 - Host 和掺杂比例只展示固态掺杂体系，不重复写入溶液条件；
-- 掺杂基质、室温条件下的 λP、τP、ΦP 显示为红色；
+- 掺杂基质、室温条件下的 λP、τP、ΦP 显示为 `#D9001B` 红色；`RT (ambient)` 等常见室温写法会被自动识别；
 - 77 K 条件下相应数据使用 `#0000FF` 蓝色；
 - 室温掺杂体系中最长的 τP 和最高的 ΦP 加粗并加下划线；
 - 77 K 条件下最长的 τP 加粗；

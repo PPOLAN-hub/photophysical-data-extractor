@@ -22,7 +22,7 @@ Create these files beside the input paper:
 
 For a batch, also create `batch_report.json` with a `paper_data_files` list and render one consolidated `batch_report.html` after every per-paper JSON passes validation.
 
-Run `scripts/validate_extraction.py paper_data.json` before rendering. Do not hand-edit `report.html`.
+Run `scripts/validate_extraction.py paper_data.json` before rendering and `scripts/validate_report_html.py paper_data.json report.html` after rendering. Do not hand-edit or independently recreate `report.html`; always use the bundled renderer so display rules remain deterministic.
 
 Read `references/extraction-policy.md` and `references/data-schema.md` before extracting. For more than one paper, read `references/batch-input.md` and build the manifest before opening PDFs. For installation, commands, configuration, and troubleshooting, read `references/usage-guide.md`.
 
@@ -36,7 +36,7 @@ Use the bundled `report_config.json` as the default main-table physical-column c
 4. Add field-level evidence before adding a specific value, including compound, host/matrix, concentration, sample state, and every measurement condition. Use short quotes and a resolvable page/table/figure/SI location.
 5. Extract paper-level KOI, a one-sentence innovation, and a problem-to-application logic skeleton. Store these once under `article_analysis`; link every synthesized item to paper-level evidence with `row_id: PAPER`.
 6. Mark missing information with a status, not a guessed value. Record cross-source conflicts and manual-review items.
-7. Validate JSON and render HTML. In the main table, show each solid formulation's Host and doping ratio once; keep solution solvent/concentration out of those two cells and identify solution, RT/77 K, and doped-film conditions through metric footnotes. Report the output paths.
+7. Validate JSON and render HTML. In the main table, show each solid formulation's Host and doping ratio once; keep solution solvent/concentration out of those two cells and identify solution, RT/77 K, and doped-film conditions through metric footnotes. For doped-matrix phosphorescence values, render room-temperature λP, τP, and ΦP in `#D9001B`; render 77 K counterparts in `#0000FF`; bold and underline the longest room-temperature τP and highest room-temperature ΦP, and bold the longest 77 K τP. Treat `RT`, `RT (ambient)`, `room temperature`, `ambient temperature`, `室温`, and 293/298/300 K as room temperature. Run the HTML validator and report the output paths.
 
 ## Batch workflow
 

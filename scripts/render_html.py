@@ -464,23 +464,63 @@ def condition_marker(sample, registry, labels):
     return registry[description]
 
 
-def doped_matrix_temperature(sample):
+def _condition_text(field):
+    """Return normalized condition text while preserving a reported unit such as K."""
+    if isinstance(field, dict):
+        if field.get("status") != "reported":
+            return ""
+        value = field.get("raw_value")
+        unit = field.get("raw_unit")
+        return " ".join(str(item) for item in (value, unit) if item not in (None, "")).strip().lower()
+    return str(field or "").strip().lower()
+
+
+def _temperature_kind(sample, field=None):
+    conditions = sample.get("conditions", {})
+    candidates = [_condition_text(conditions.get("temperature"))]
+    if isinstance(field, dict):
+        context = field.get("measurement_context")
+        if isinstance(context, dict):
+            candidates.append(_condition_text(context.get("temperature")))
+    temperature = " ".join(item for item in candidates if item)
+
+    # Check cryogenic data first so a verbose string can never be mistaken for RT.
+    if re.search(r"(?<!\d)77(?:\.0+)?\s*k\b", temperature) or "液氮" in temperature:
+        return "77k"
+    if (
+        re.search(r"(?:^|[^a-z])r\.?\s*t\.?(?:$|[^a-z])", temperature)
+        or "room temperature" in temperature
+        or "ambient temperature" in temperature
+        or "室温" in temperature
+        or re.search(r"(?<!\d)(?:293|298|300)(?:\.0+)?\s*k\b", temperature)
+    ):
+        return "rt"
+
+    # Some source tables report only "ambient conditions" in the atmosphere field.
+    atmosphere = _condition_text(conditions.get("atmosphere"))
+    if not temperature and ("ambient" in atmosphere or "室温" in atmosphere):
+        return "rt"
+    return ""
+
+
+def doped_matrix_temperature(sample, field=None):
     identity = sample.get("identity", {})
     state = raw(identity.get("sample_state"), "").lower()
+    host_text = raw(identity.get("host_matrix"), "").lower()
+    ratio_text = raw(identity.get("doping_ratio"), "").lower()
     host = identity.get("host_matrix")
     ratio = identity.get("doping_ratio")
-    if "solution" in state or "溶液" in state:
+    solution_tokens = ("solution", "溶液", "solvent", "toluene", "tol ", "thf", "dmf", "dcm", "chloroform")
+    if any(token in state or token in host_text for token in solution_tokens):
         return ""
     if not isinstance(host, dict) or host.get("status") != "reported":
         return ""
-    if not isinstance(ratio, dict) or ratio.get("status") != "reported":
+    ratio_reported = isinstance(ratio, dict) and ratio.get("status") == "reported"
+    doped_state = any(token in state for token in ("doped", "blend", "掺杂", "共混"))
+    ratio_like = bool(re.search(r"(?:wt\s*%|mol\s*%|mass\s*%|\bppm\b)", ratio_text))
+    if not (ratio_reported or doped_state or ratio_like):
         return ""
-    temperature = raw(sample.get("conditions", {}).get("temperature"), "").lower()
-    if temperature == "rt" or "room temperature" in temperature or "室温" in temperature:
-        return "rt"
-    if re.search(r"\b77\s*k\b", temperature) or "77 k" in temperature:
-        return "77k"
-    return ""
+    return _temperature_kind(sample, field)
 
 
 def comparison_value(name, field):
@@ -505,12 +545,12 @@ def doped_maxima(samples):
         "77k": {"tau_p": None},
     }
     for sample in samples:
-        temperature_kind = doped_matrix_temperature(sample)
-        if temperature_kind not in maxima:
-            continue
-        for name in maxima[temperature_kind]:
+        for name in ("tau_p", "phi_p"):
             field = sample.get("fields", {}).get(name)
             if not isinstance(field, dict) or field.get("status") != "reported":
+                continue
+            temperature_kind = doped_matrix_temperature(sample, field)
+            if temperature_kind not in maxima or name not in maxima[temperature_kind]:
                 continue
             value = comparison_value(name, field)
             current = maxima[temperature_kind][name]
@@ -532,7 +572,7 @@ def all_condition_field(records, group, name, registry, labels, maxima):
         if key in seen:
             continue
         seen.add(key)
-        temperature_kind = doped_matrix_temperature(sample)
+        temperature_kind = doped_matrix_temperature(sample, field)
         classes = []
         numeric_value = comparison_value(name, field)
         if name in {"lambda_p", "tau_p", "phi_p"} and temperature_kind == "rt":
@@ -929,6 +969,7 @@ def main(source_text: str, output_text: str, config_text=None) -> None:
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="pde-renderer" content="photophysical-data-extractor">
 <title>{esc(title)}</title>
 <style>
 :root{{--ink:#182235;--muted:#64748b;--line:#dce3ec;--soft:#f5f7fa;--blue:#2357a5;--blue-soft:#edf4ff;--green:#18794e;--green-soft:#e9f7ef;--amber:#9a6700;--amber-soft:#fff4d6;--red:#b42318;--red-soft:#fff0ee}}
@@ -985,7 +1026,7 @@ h1{{max-width:1100px;margin:0;font-size:clamp(25px,3vw,38px);line-height:1.25}}
 .data-table thead th:first-child{{left:0;z-index:5}}
 .synthesis-row td,.innovation-row td{{text-align:left;padding:13px 16px;white-space:normal;max-width:none;background:#fbfcfe;font-size:12pt;color:#334155}}.condition-footnotes+.synthesis-row td{{border-top:2px solid #9fb2c8}}.synthesis-row b,.innovation-row b{{color:var(--blue)}}
 .condition-ref{{margin-left:2px;color:#7a4d00;font-size:9px;font-weight:800}}.condition-values{{white-space:normal}}.value-citation{{display:inline-block;white-space:nowrap}}
-.doped-rt-phosphor{{color:#c5162e}}.doped-77k-phosphor{{color:#0000FF}}
+.doped-rt-phosphor{{color:#D9001B}}.doped-77k-phosphor{{color:#0000FF}}
 .best-lifetime{{font-weight:850;text-decoration:underline;text-underline-offset:2px}}
 .best-efficiency{{font-weight:850;text-decoration:underline;text-underline-offset:2px}}
 .best-77k-lifetime{{font-weight:850}}
