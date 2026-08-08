@@ -68,7 +68,7 @@ npx skills add PPOLAN-hub/photophysical-data-extractor --skill photophysical-dat
 
 Cherry Studio 1.9.12 或更新版本支持界面安装，无需命令行。请下载已经打包并测试的专用文件：
 
-[下载 photophysical-data-extractor-skill-v1.3.0.zip](https://github.com/PPOLAN-hub/photophysical-data-extractor/releases/latest/download/photophysical-data-extractor-skill-v1.3.0.zip)
+[下载 photophysical-data-extractor-skill-v1.3.1.zip](https://github.com/PPOLAN-hub/photophysical-data-extractor/releases/latest/download/photophysical-data-extractor-skill-v1.3.1.zip)
 
 1. 使用有权限的 GitHub 账号下载上述 ZIP；
 2. 打开 Cherry Studio 的 `设置 → 技能`；
@@ -149,7 +149,7 @@ P03.pdf  对应  S03.pdf
 - 77 K 条件下相应数据使用 `#0000FF` 蓝色；
 - 室温掺杂体系中最长的 τP 和最高的 ΦP 加粗并加下划线；
 - 77 K 条件下最长的 τP 加粗；
-- 数值、条件上标和浅灰色 `[Exx]` 证据编号保持同一行；
+- 数值、常规字重的条件上标和浅灰色 `[Exx]` 证据编号保持同一行；条件上标不加粗，以便与数据值快速区分；
 - 点击 `[Exx]` 会展开证据区，并以浅绿色高亮目标条目；
 - 高置信度证据只显示表号或原文开头；中低置信度、冲突和模糊项进入人工复核。
 

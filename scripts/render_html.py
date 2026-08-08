@@ -1052,13 +1052,13 @@ h1{{max-width:1100px;margin:0;font-size:clamp(25px,3vw,38px);line-height:1.25}}
 .data-table .compound-cell{{position:sticky;left:0;z-index:2;min-width:130px;background:#fff;font-size:12pt;font-weight:800;color:#172b4d}}
 .data-table thead th:first-child{{left:0;z-index:5}}
 .synthesis-row td,.innovation-row td{{text-align:left;padding:13px 16px;white-space:normal;max-width:none;background:#fbfcfe;font-size:12pt;color:#334155}}.condition-footnotes+.synthesis-row td{{border-top:2px solid #9fb2c8}}.synthesis-row b,.innovation-row b{{color:var(--blue)}}
-.condition-ref{{margin-left:2px;color:#7a4d00;font-size:9px;font-weight:800}}.condition-values{{white-space:normal}}.value-citation{{display:inline-block;white-space:nowrap}}
+.condition-ref{{margin-left:2px;color:#7a4d00;font-size:9px;font-weight:400}}.condition-values{{white-space:normal}}.value-citation{{display:inline-block;white-space:nowrap}}
 .doped-rt-phosphor{{color:#D9001B}}.doped-77k-phosphor{{color:#0000FF}}
 .best-lifetime{{font-weight:850;text-decoration:underline;text-underline-offset:2px}}
 .best-efficiency{{font-weight:850;text-decoration:underline;text-underline-offset:2px}}
 .best-77k-lifetime{{font-weight:850}}
 .condition-footnotes td{{text-align:left;max-width:none;padding:12px 16px;background:#fffdf7;color:#5f5335;line-height:1.55}}
-.condition-footnotes div{{display:inline;margin-right:18px}}.condition-footnotes sup{{color:#7a4d00;font-weight:800}}
+.condition-footnotes div{{display:inline;margin-right:18px}}.condition-footnotes sup{{color:#7a4d00;font-weight:400}}
 .condition-line{{display:block;margin-top:4px;color:#526070}}.table-empty{{color:#a4adba}}
 .stacked-entry{{padding:7px 0;border-bottom:1px dashed #d8e0ea}}.stacked-entry:first-child{{padding-top:0}}.stacked-entry:last-child{{padding-bottom:0;border-bottom:0}}
 .condition-tag{{display:inline-block;margin-bottom:4px;padding:2px 6px;border-radius:999px;background:#e9f1fb;color:#2c5687;font-size:10px;font-weight:800;white-space:nowrap}}
