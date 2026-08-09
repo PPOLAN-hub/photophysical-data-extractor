@@ -1,5 +1,32 @@
 # Photophysical Data Extractor
 
+## 安装
+
+需要 Node.js（用于运行 
+px）以及 [skills CLI](https://www.npmjs.com/package/skills)。这是私有仓库：安装时使用的 GitHub 账户必须具有该仓库访问权限。
+
+### Claude Code
+
+`ash
+npx skills add PPOLAN-hub/photophysical-data-extractor --skill photophysical-data-extractor --agent claude
+`
+
+### Codex
+
+`ash
+npx skills add PPOLAN-hub/photophysical-data-extractor --skill photophysical-data-extractor --agent codex
+`
+
+### Kimi CLI
+
+`ash
+npx skills add PPOLAN-hub/photophysical-data-extractor --skill photophysical-data-extractor --agent kimi-cli
+`
+
+### Cherry Studio / 手工 ZIP 安装
+
+使用有仓库访问权限的 GitHub 账户下载该仓库的 ZIP 源码包；无需解压或重新压缩。在 Cherry Studio 的“设置 → 技能”中选择“从 ZIP 文件安装”，然后在目标 Agent 的技能设置中启用 $(System.Collections.Hashtable.skill)。不要将 Personal Access Token 写入命令、聊天记录或仓库。
+
 面向有机材料光物理与电子结构论文的证据可溯源数据抽取 Skill，简称 **PDE**。除发光光谱、寿命和效率外，默认抽取并显示 HOMO、LUMO、S1、T1 与 ΔEST。
 
 单篇论文上传正文及 Supporting Information（SI）后，输入 `PDE` 即可；多篇论文使用 `PDEmore`。Agent 会自动完成论文读取、数据抽取、证据关联、JSON 校验和 HTML 报告生成；用户不需要手工执行脚本或自行制作 HTML。
@@ -33,49 +60,6 @@ batch_report.html
 ```
 
 `paper_data.json` 是唯一数据源，HTML 由当前 JSON 自动生成。不要手工修改 HTML。
-
-## 安装
-
-需要 Node.js（用于运行 `npx`）及 [skills CLI](https://skills.sh/)。本仓库为私人仓库，当前 GitHub 账号必须具有访问权限。README 不要求、也不提供手动克隆私人仓库的安装方式。
-
-### Claude Code
-
-```powershell
-npx skills add PPOLAN-hub/photophysical-data-extractor --skill photophysical-data-extractor --agent claude-code
-```
-
-### Codex
-
-```powershell
-npx skills add PPOLAN-hub/photophysical-data-extractor --skill photophysical-data-extractor --agent codex
-```
-
-### Kimi CLI
-
-```powershell
-npx skills add PPOLAN-hub/photophysical-data-extractor --skill photophysical-data-extractor --agent kimi-cli
-```
-
-也可以一次安装到多个 Agent：
-
-```powershell
-npx skills add PPOLAN-hub/photophysical-data-extractor --skill photophysical-data-extractor --agent claude-code --agent codex --agent kimi-cli
-```
-
-不要把 Personal Access Token 写入命令、提示词、聊天记录或仓库。
-
-### Cherry Studio
-
-Cherry Studio 1.9.12 或更新版本支持界面安装，无需命令行。请下载已经打包并测试的专用文件：
-
-[下载 photophysical-data-extractor-skill-v1.3.1.zip](https://github.com/PPOLAN-hub/photophysical-data-extractor/releases/latest/download/photophysical-data-extractor-skill-v1.3.1.zip)
-
-1. 使用有权限的 GitHub 账号下载上述 ZIP；
-2. 打开 Cherry Studio 的 `设置 → 技能`；
-3. 选择“从 ZIP 文件安装”，并直接选择下载的文件；
-4. 打开目标 Agent 的设置，在“技能”中启用 `photophysical-data-extractor`。
-
-ZIP 不需要解压或重新压缩。私人仓库不会出现在公共技能搜索结果中，因此 Cherry Studio 使用本地 ZIP 导入。
 
 ## 调用
 
