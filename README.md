@@ -2,30 +2,29 @@
 
 ## 安装
 
-需要 Node.js（用于运行 
-px）以及 [skills CLI](https://www.npmjs.com/package/skills)。这是私有仓库：安装时使用的 GitHub 账户必须具有该仓库访问权限。
+需要 Node.js（用于运行 `npx`）以及 [skills CLI](https://www.npmjs.com/package/skills)。这是私有仓库：安装时使用的 GitHub 账户必须具有该仓库访问权限。
 
 ### Claude Code
 
-`ash
-npx skills add PPOLAN-hub/photophysical-data-extractor --skill photophysical-data-extractor --agent claude
-`
+```bash
+npx skills add PPOLAN-hub/photophysical-data-extractor --skill photophysical-data-extractor --agent claude-code
+```
 
 ### Codex
 
-`ash
+```bash
 npx skills add PPOLAN-hub/photophysical-data-extractor --skill photophysical-data-extractor --agent codex
-`
+```
 
 ### Kimi CLI
 
-`ash
+```bash
 npx skills add PPOLAN-hub/photophysical-data-extractor --skill photophysical-data-extractor --agent kimi-cli
-`
+```
 
 ### Cherry Studio / 手工 ZIP 安装
 
-使用有仓库访问权限的 GitHub 账户下载该仓库的 ZIP 源码包；无需解压或重新压缩。在 Cherry Studio 的“设置 → 技能”中选择“从 ZIP 文件安装”，然后在目标 Agent 的技能设置中启用 $(System.Collections.Hashtable.skill)。不要将 Personal Access Token 写入命令、聊天记录或仓库。
+使用有仓库访问权限的 GitHub 账户下载该仓库的 ZIP 源码包；无需解压或重新压缩。在 Cherry Studio 的“设置 → 技能”中选择“从 ZIP 文件安装”，然后在目标 Agent 的技能设置中启用 `photophysical-data-extractor`。不要将 Personal Access Token 写入命令、聊天记录或仓库。
 
 面向有机材料光物理与电子结构论文的证据可溯源数据抽取 Skill，简称 **PDE**。除发光光谱、寿命和效率外，默认抽取并显示 HOMO、LUMO、S1、T1 与 ΔEST。
 
