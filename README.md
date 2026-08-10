@@ -1,6 +1,6 @@
-# Photophysical Data Extractor
+# 🔬 Photophysical Data Extractor
 
-## 安装
+## 📦 安装
 
 需要 Node.js（用于运行 `npx`）以及 [skills CLI](https://www.npmjs.com/package/skills)。这是私有仓库：安装时使用的 GitHub 账户必须具有该仓库访问权限。
 
@@ -26,11 +26,11 @@ npx skills add PPOLAN-hub/photophysical-data-extractor --skill photophysical-dat
 
 使用有仓库访问权限的 GitHub 账户下载该仓库的 ZIP 源码包；无需解压或重新压缩。在 Cherry Studio 的“设置 → 技能”中选择“从 ZIP 文件安装”，然后在目标 Agent 的技能设置中启用 `photophysical-data-extractor`。不要将 Personal Access Token 写入命令、聊天记录或仓库。
 
-面向有机材料光物理与电子结构论文的证据可溯源数据抽取 Skill，简称 **PDE**。除发光光谱、寿命和效率外，默认抽取并显示 HOMO、LUMO、S1、T1 与 ΔEST。
+✨ 面向有机材料光物理与电子结构论文的证据可溯源数据抽取 Skill，简称 **PDE**。除发光光谱、寿命和效率外，默认抽取并显示 HOMO、LUMO、S1、T1 与 ΔEST。
 
 单篇论文上传正文及 Supporting Information（SI）后，输入 `PDE` 即可；多篇论文使用 `PDEmore`。Agent 会自动完成论文读取、数据抽取、证据关联、JSON 校验和 HTML 报告生成；用户不需要手工执行脚本或自行制作 HTML。
 
-## 主要能力
+## ⚡ 主要能力
 
 - 支持单篇论文和多篇论文批量抽取；
 - 抽取化合物、Host/Matrix、掺杂比例、样品状态和测试条件；
@@ -42,7 +42,7 @@ npx skills add PPOLAN-hub/photophysical-data-extractor --skill photophysical-dat
 - 自动生成经过校验的 JSON 和便于比较、溯源的 HTML；
 - 支持修改主数据表的物理量列、顺序、名称和表头样式。
 
-## 输出
+## 📄 输出
 
 单篇论文自动生成：
 
@@ -60,7 +60,7 @@ batch_report.html
 
 `paper_data.json` 是唯一数据源，HTML 由当前 JSON 自动生成。不要手工修改 HTML。
 
-## 调用
+## 🚀 调用
 
 单篇论文可直接上传正文和 SI 两份文件，文件名不作要求，也不需要用户说明哪份是正文、哪份是 SI。输入：
 
@@ -84,7 +84,7 @@ PDEmore
 
 `PDEmore` 启动严格的批量配对；Agent 不会按标题或上传顺序猜测正文与 SI 的对应关系。
 
-## 批量文件命名
+## 🗂️ 批量文件命名
 
 批量处理支持两种确定性命名。推荐使用第一种：
 
@@ -107,7 +107,7 @@ P03.pdf  对应  S03.pdf
 - 正文没有 SI 时可以继续，但报告必须标记 SI 缺失；
 - 出现孤立 SI、重复正文或重复 SI 时必须停止并提醒用户。
 
-## 抽取范围
+## 🎯 抽取范围
 
 | 类别 | 默认关注内容 |
 |---|---|
@@ -124,7 +124,7 @@ P03.pdf  对应  S03.pdf
 
 主数据表中的“类型”默认只保留 `RTP`、`TADF`、`RTP/TADF`；两者均不成立时使用兼容字段 `Tranditional-F`。JSON 仍保留作者给出的完整发光归属。
 
-## 报告显示规则
+## 🎨 报告显示规则
 
 - 每种化合物在主表中只显示一行；不同测试条件在同一单元格中换行并以脚注区分；
 - Host 和掺杂比例只展示固态掺杂体系，不重复写入溶液条件；
@@ -138,7 +138,7 @@ P03.pdf  对应  S03.pdf
 
 颜色用于帮助比较，不替代测试条件脚注，也不代表证据置信度。
 
-## 自定义物理量表头
+## ⚙️ 自定义物理量表头
 
 默认物理量列位于根目录 `report_config.json`。固定列“化合物、Host、掺杂比例、类型”不受配置控制；其余列可重新排序、删除、增加或改名。
 
@@ -174,7 +174,7 @@ k_isc, k_risc, k_rp, knr_p
 
 完整配置说明见 [references/usage-guide.md](references/usage-guide.md)。
 
-## 可靠性原则
+## 🛡️ 可靠性原则
 
 - 每个报告值必须关联有效证据；
 - 总 PLQY 不得自动等同于磷光量子效率；
@@ -184,7 +184,7 @@ k_isc, k_risc, k_rp, knr_p
 - 计算值必须记录公式、输入和输入证据；
 - 来源存在歧义或冲突时必须进入人工复核。
 
-## 环境说明
+## 🖥️ 环境说明
 
 - Python 3.9 或更高版本；解释器候选顺序记录在 `runtime_config.json`；
 - Agent 必须能够读取论文文件、写入输出目录并运行 Skill 自带脚本；
@@ -196,7 +196,7 @@ k_isc, k_risc, k_rp, knr_p
 
 无论使用 Codex、Claude、Kimi、DeepSeek 或其他模型，都应保留 JSON 校验、证据链接及中低置信度人工复核。上传论文到云端模型前，请自行核对版权、保密和数据处理政策。
 
-## 进一步阅读
+## 📚 进一步阅读
 
 - [抽取与证据政策](references/extraction-policy.md)
 - [JSON 数据结构](references/data-schema.md)
