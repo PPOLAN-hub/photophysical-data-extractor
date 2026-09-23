@@ -135,7 +135,8 @@ def main() -> int:
     write_zip(files, output_path)
     names = validate_zip(output_path)
     digest = hashlib.sha256(output_path.read_bytes()).hexdigest()
-    checksum_path.write_text(f"{digest}  {output_path.name}\n", encoding="utf-8", newline="\n")
+    with checksum_path.open("w", encoding="utf-8", newline="\n") as handle:
+        handle.write(f"{digest}  {output_path.name}\n")
 
     print(
         json.dumps(

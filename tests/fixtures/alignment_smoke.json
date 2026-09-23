@@ -1,0 +1,62 @@
+{
+  "paper": {
+    "paper_id": "ALIGN-SMOKE",
+    "title": "Condition-row alignment smoke test",
+    "doi": "10.0000/alignment",
+    "journal": "Test Journal",
+    "year": 2026,
+    "authors": ["PDE Test"],
+    "main_pdf_reviewed": true,
+    "supporting_information_reviewed": false
+  },
+  "samples": [
+    {
+      "row_id": "R1",
+      "identity": {
+        "compound": {"status": "reported", "raw_value": "Example", "raw_unit": null, "evidence_id": "E1"},
+        "sample_state": {"status": "reported", "raw_value": "doped film", "raw_unit": null, "evidence_id": "E2"},
+        "host_matrix": {"status": "reported", "raw_value": "PMMA", "raw_unit": null, "evidence_id": "E3"},
+        "doping_ratio": {"status": "reported", "raw_value": "1 wt%", "raw_unit": null, "evidence_id": "E4"}
+      },
+      "conditions": {
+        "temperature": {"status": "reported", "raw_value": "RT", "raw_unit": null, "evidence_id": "E5"}
+      },
+      "fields": {
+        "lambda_p": {"status": "reported", "raw_value": "500", "raw_unit": "nm", "evidence_id": "E6"},
+        "tau_p": {"status": "reported", "raw_value": "430", "raw_unit": "ms", "evidence_id": "E7"}
+      },
+      "notes": ""
+    },
+    {
+      "row_id": "R2",
+      "identity": {
+        "compound": {"status": "reported", "raw_value": "Example", "raw_unit": null, "evidence_id": "E1"},
+        "sample_state": {"status": "reported", "raw_value": "doped film", "raw_unit": null, "evidence_id": "E2"},
+        "host_matrix": {"status": "reported", "raw_value": "PMMA", "raw_unit": null, "evidence_id": "E3"},
+        "doping_ratio": {"status": "reported", "raw_value": "1 wt%", "raw_unit": null, "evidence_id": "E4"}
+      },
+      "conditions": {
+        "temperature": {"status": "reported", "raw_value": "77 K", "raw_unit": null, "evidence_id": "E8"}
+      },
+      "fields": {
+        "phi_p": {"status": "reported", "raw_value": "4.30", "raw_unit": "%", "evidence_id": "E9"},
+        "k_isc": {"status": "reported", "raw_value": "6 accessible channels", "raw_unit": null, "evidence_id": "E10"}
+      },
+      "notes": ""
+    }
+  ],
+  "evidence_ledger": [
+    {"evidence_id": "E1", "row_id": "R1", "field_name": "compound", "extracted_value": "Example", "location": "Main PDF p. 1", "quote": "Example", "type": "direct_text", "confidence": "high", "manual_check_note": ""},
+    {"evidence_id": "E2", "row_id": "R1", "field_name": "sample_state", "extracted_value": "doped film", "location": "Main PDF p. 2", "quote": "doped film", "type": "direct_text", "confidence": "high", "manual_check_note": ""},
+    {"evidence_id": "E3", "row_id": "R1", "field_name": "host_matrix", "extracted_value": "PMMA", "location": "Main PDF p. 2", "quote": "PMMA host", "type": "direct_text", "confidence": "high", "manual_check_note": ""},
+    {"evidence_id": "E4", "row_id": "R1", "field_name": "doping_ratio", "extracted_value": "1 wt%", "location": "Main PDF p. 2", "quote": "1 wt%", "type": "direct_text", "confidence": "high", "manual_check_note": ""},
+    {"evidence_id": "E5", "row_id": "R1", "field_name": "temperature", "extracted_value": "RT", "location": "Main PDF p. 3", "quote": "at room temperature", "type": "direct_text", "confidence": "high", "manual_check_note": ""},
+    {"evidence_id": "E6", "row_id": "R1", "field_name": "lambda_p", "extracted_value": "500 nm", "location": "Main PDF p. 3", "quote": "phosphorescence at 500 nm", "type": "direct_text", "confidence": "high", "manual_check_note": ""},
+    {"evidence_id": "E7", "row_id": "R1", "field_name": "tau_p", "extracted_value": "430 ms", "location": "Main PDF p. 3", "quote": "phosphorescence lifetime 430 ms", "type": "direct_text", "confidence": "high", "manual_check_note": ""},
+    {"evidence_id": "E8", "row_id": "R2", "field_name": "temperature", "extracted_value": "77 K", "location": "Main PDF p. 4", "quote": "measured at 77 K", "type": "direct_text", "confidence": "high", "manual_check_note": ""},
+    {"evidence_id": "E9", "row_id": "R2", "field_name": "phi_p", "extracted_value": "4.30%", "location": "Main PDF p. 4", "quote": "phosphorescence quantum yield 4.30%", "type": "direct_text", "confidence": "high", "manual_check_note": ""},
+    {"evidence_id": "E10", "row_id": "R2", "field_name": "k_isc", "extracted_value": "6 accessible channels", "location": "Main PDF p. 5", "quote": "six accessible ISC channels", "type": "author_assignment", "confidence": "high", "manual_check_note": ""}
+  ],
+  "manual_review": [],
+  "rate_calculations": []
+}

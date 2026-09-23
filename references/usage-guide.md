@@ -6,9 +6,11 @@
 
 - `paper_data.json`：机器可读、可校验的唯一数据源；
 - `report.html`：供阅读、比较和人工复核的网页报告；
-- 批量任务中的 `batch_manifest.json`、`batch_report.json` 和 `batch_report.html`。
+- `report.docx`：由同一 JSON 确定性生成的 Word 报告；
+- Obsidian Vault 中的一次运行一份 Markdown 报告卡；
+- 批量任务中的 `batch_manifest.json`、`batch_report.json`、`batch_report.html` 和 `batch_report.docx`。
 
-本仓库不是一个仅靠单条 Python 命令即可完成语义抽取的传统程序。论文理解、表格含义判断和证据归属由支持 Agent Skills 的模型完成；配对、校验和 HTML 渲染由确定性脚本完成。
+本仓库不是一个仅靠单条 Python 命令即可完成语义抽取的传统程序。论文理解、表格含义判断和证据归属由支持 Agent Skills 的模型完成；配对、校验、HTML/Word 渲染和 Obsidian 归档由确定性脚本完成。
 
 ## 2. 环境准备
 
@@ -30,7 +32,7 @@
 
 本仓库是 GitHub Private repository。安装前必须确认当前 Git/GitHub 凭据具有 `PPOLAN-hub/photophysical-data-extractor` 的访问权限；仅在浏览器中登录 GitHub 不等于命令行已获得私有仓库访问权限。不要把 Personal Access Token 写入命令、提示词、聊天记录或仓库。
 
-本次豆包发行支持更新后，当前稳定版本为 `skill-v1.4.2`。
+本次多格式交付与强制归档配置更新发布后，当前稳定版本为 `skill-v1.5.0`。
 
 使用 skills CLI 做首次全局安装：
 
@@ -90,16 +92,16 @@ $DSH_HOME/skills/          # 默认通常为 ~/.dsh/skills/
 
 #### 豆包工作
 
-带“工作”模式和“插件 · 技能 · 伙伴”入口的豆包桌面端支持上传标准技能包。不要使用未经支持的 `--agent doubao` 命令。从 Release 下载 `photophysical-data-extractor-doubao-skill-v1.4.2.zip`，在“工作 → 插件 · 技能 · 伙伴 → 新建/上传技能”中上传。安装后从工作对话输入框下方的“技能”选择 `photophysical-data-extractor`。
+带“工作”模式和“插件 · 技能 · 伙伴”入口的豆包桌面端支持上传标准技能包。不要使用未经支持的 `--agent doubao` 命令。从 Release 下载 `photophysical-data-extractor-doubao-skill-v1.5.0.zip`，在“工作 → 插件 · 技能 · 伙伴 → 新建/上传技能”中上传。安装后从工作对话输入框下方的“技能”选择 `photophysical-data-extractor`。
 
 豆包发行 ZIP 必须由 `scripts/package_doubao_skill.py` 生成，确保 `SKILL.md` 位于 ZIP 根目录，完整保留脚本和参考资料，并排除测试、论文、密钥、本机配置和 Git 元数据。不要上传 GitHub 自动生成的 Source code ZIP。
 
-安装后必须先运行环境自检。豆包能够执行 `check_environment.py`、读取 PDF、写入 JSON/HTML 并执行后续索引和校验脚本，才算支持半自动化 PDE。失败时必须报告 `PDE script runtime unavailable`。完整安装步骤、环境自检提示词和正式调用提示词见 [`doubao-install-and-prompts.md`](doubao-install-and-prompts.md)。
+安装后必须先运行环境自检，并配置统一输出根目录与 Obsidian 归档。豆包能够执行 `check_environment.py`、把 JSON/HTML/DOCX 写入已配置输出目录、读取用户选择的归档约定并写入已验证 Vault，才算支持完整半自动化 PDE。失败时必须报告明确阻断原因，不得散落文件或跳过归档。完整提示词见 [`doubao-install-and-prompts.md`](doubao-install-and-prompts.md)。
 
 维护者生成豆包发行附件：
 
 ```powershell
-<selected-python> scripts/package_doubao_skill.py --version skill-v1.4.2 --output-dir <release-assets-directory>
+<selected-python> scripts/package_doubao_skill.py --version skill-v1.5.0 --output-dir <release-assets-directory>
 ```
 
 将生成的 ZIP 与同名 `.sha256` 文件一并上传到 GitHub Release；二进制发行附件不得提交进 Git 历史。
@@ -118,7 +120,7 @@ PDE
 PDE，重点核对 77 K 数据和 SI 中的寿命表格。
 ```
 
-Agent 必须自动识别正文与 SI，并完成抽取、JSON 校验和 HTML 渲染，不得要求用户手工运行校验器或渲染器。
+Agent 必须先从本机私有配置读取统一输出根目录，运行 `scripts/prepare_output_dir.py` 建立任务目录，再自动识别正文与 SI，并完成抽取、JSON 校验、HTML/Word 渲染和 Obsidian 归档，不得要求用户手工运行校验器或渲染器。完整报告保存在输出根目录；Obsidian 仅保存归档卡和链接。
 
 Agent 会先运行 `scripts/index_sources.py`，一次性生成带 PDF 页码及表/图/方案锚点的 `source_index.json`；后续语义抽取复用该索引，只在图形或版式含义不清时重新查看原 PDF。随后运行 `scripts/fetch_bibliography.py` 获取 DOI、作者、期刊、卷期、年份、文章号和带来源状态的引用格式。出版社页面阻止自动访问时，引用必须标记为 Crossref 元数据格式化结果，并由 Agent 在官方页面复核后才能标为官方引用。
 
@@ -273,7 +275,7 @@ P03.pdf  对应  S03.pdf
 
 ### 自定义配置没有生效
 
-确认配置文件是有效 JSON，并在调用 `PDE` 时把该配置文件与论文一起交给 Agent。未提供自定义配置时，Agent 使用 Skill 根目录的默认 `report_config.json`。
+确认配置文件是有效 JSON，并在调用 `PDE` 时把该配置文件与论文一起交给 Agent。未提供自定义显示配置时，Agent 使用 Skill 根目录的默认 `report_config.json`。
 
 ### 表头字段存在但整列为空
 
@@ -285,7 +287,7 @@ P03.pdf  对应  S03.pdf
 
 ### 一篇文章出现重复化合物行
 
-JSON 中可以有多个条件记录，但 HTML 应按化合物合并为一行。检查化合物名称是否存在大小写、连字符或空格差异，并确认不同论文没有被错误合并。
+JSON 中的每个样品/条件记录必须在 HTML 中生成一个独立子行；只允许化合物名称纵向合并。若不同物理量看似错位，检查报告是否由当前 `render_html.py` 重新生成，并运行 `validate_report_html.py` 核对条件子行数。
 
 ## 8. 发布前检查清单
 

@@ -18,3 +18,5 @@ batch_report.html
 *_candidate.json
 *.log
 dist/
+.pde-archive.json
+archive_config.local.json

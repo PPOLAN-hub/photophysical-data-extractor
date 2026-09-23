@@ -2,6 +2,8 @@
 
 These are execution invariants for every model and agent runtime. They constrain the workflow; they do not authorize invention, automatic conflict resolution, or new scientific fields outside `data-schema.md`.
 
+Before a formal extraction, the runtime MUST resolve a confirmed local configuration containing a persistent output root outside the Vault, a valid Vault root, relative archive directory, and user-selected convention file. It MUST verify write access to both roots, create a task directory below the output root, reread the convention, and verify its saved SHA-256 on every run. Missing or changed configuration blocks formal extraction; the agent must not silently select a path, scatter deliverables, skip archiving, or write personal paths into tracked Skill files.
+
 ## Runtime gate
 
 1. MUST run `index_sources.py` before semantic extraction. Do not repeatedly extract PDF text.
@@ -38,6 +40,9 @@ These are execution invariants for every model and agent runtime. They constrain
 
 18. Keep author claims separate from extractor synthesis. Preserve tentative language such as `may`, `suggest`, and `consistent with`.
 19. Use only fields defined by `data-schema.md`. Do not invent field names to hide unsupported measurements; place relevant unsupported measurements in evidence-backed notes or manual review.
+20. Treat canonical JSON as the only scientific source of truth. HTML, DOCX, and Obsidian Markdown MUST be deterministic read-only views of that JSON and MUST pass their bundled validators.
+21. In HTML, render one horizontal subrow per JSON sample/condition record. Values from different conditions MUST NOT be independently stacked into visually corresponding positions.
+22. Keep transient indexes and bibliography files in the task `_work/` directory. Store validated JSON, HTML, and DOCX only below the configured output root; the Obsidian card is a link-bearing archive view, not the primary file store.
 20. MUST run `audit_extraction.py`, resolve or record every warning, and pass `validate_extraction.py` before rendering.
 21. MUST NOT claim completion if required scripts failed, validation failed, SI coverage is misstated, or unresolved conflicts were silently discarded.
 

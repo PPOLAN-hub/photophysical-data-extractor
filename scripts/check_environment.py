@@ -11,6 +11,7 @@ PACKAGES = {
     "pypdf": "pypdf",
     "PyMuPDF": "fitz",
     "PyYAML": "yaml",
+    "python-docx": "docx",
 }
 
 OPTIONAL_PACKAGES = {

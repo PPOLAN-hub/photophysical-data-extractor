@@ -734,6 +734,19 @@ def logic_rows(analysis, colspan):
     return "".join(rows)
 
 
+def sample_formulation_field(sample, name):
+    """Render one solid formulation field for one measurement-condition row."""
+    identity = sample.get("identity", {})
+    sample_state = raw(identity.get("sample_state"), "").lower()
+    solid_tokens = ("film", "doped", "blend", "matrix", "solid", "crystal", "powder", "aggregate", "薄膜", "掺杂", "固态", "晶体", "粉末", "聚集")
+    if not any(token in sample_state for token in solid_tokens):
+        return "<span class='table-empty'>—</span>"
+    field = identity.get(name)
+    if not isinstance(field, dict) or field.get("status") != "reported":
+        return "<span class='table-empty'>—</span>"
+    return table_raw(name, field) + evidence_link(field.get("evidence_id"))
+
+
 def data_table(samples, analysis, table_columns):
     headers = "".join(
         f"<th class='{'metric-header' if group == 'fields' and name != 'emission_assignment' else ''}'>{label}</th>"
@@ -748,25 +761,40 @@ def data_table(samples, analysis, table_columns):
     maxima = doped_maxima(samples)
     rows = []
     for compound, records in grouped.items():
-        cells = []
-        for name, _, group in table_columns:
-            if name == "compound":
-                compound_fields = [item.get("identity", {}).get("compound") for item in records]
-                evidence_ids = []
-                for field in compound_fields:
-                    if isinstance(field, dict) and field.get("evidence_id") not in evidence_ids:
-                        evidence_ids.append(field.get("evidence_id"))
-                value = esc(compound) + (evidence_link(evidence_ids[0]) if evidence_ids else "")
-            elif name == "emission_assignment":
-                value = assignment_cell(records)
-            elif name in {"host_matrix", "doping_ratio"}:
-                value = formulation_field(records, name)
-            else:
-                value = all_condition_field(records, group, name, condition_registry, condition_labels, maxima)
-            cell_class = "compound-cell" if name == "compound" else ""
-            cells.append(f"<td class='{cell_class}'>{value}</td>")
-        record_ids = ", ".join(str(item.get("row_id")) for item in records)
-        rows.append(f"<tr title='条件记录：{esc(record_ids)}'>{''.join(cells)}</tr>")
+        compound_fields = [item.get("identity", {}).get("compound") for item in records]
+        compound_evidence = next(
+            (
+                field.get("evidence_id")
+                for field in compound_fields
+                if isinstance(field, dict) and field.get("evidence_id")
+            ),
+            None,
+        )
+        for record_index, sample in enumerate(records):
+            cells = []
+            for name, _, group in table_columns:
+                if name == "compound":
+                    if record_index:
+                        continue
+                    value = esc(compound) + evidence_link(compound_evidence)
+                    cells.append(
+                        f"<td class='compound-cell' rowspan='{len(records)}'>{value}</td>"
+                    )
+                    continue
+                if name == "emission_assignment":
+                    value = assignment_cell([sample])
+                elif name in {"host_matrix", "doping_ratio"}:
+                    value = sample_formulation_field(sample, name)
+                else:
+                    value = all_condition_field(
+                        [sample], group, name, condition_registry, condition_labels, maxima
+                    )
+                cells.append(f"<td>{value}</td>")
+            row_id = str(sample.get("row_id") or "未标注")
+            rows.append(
+                f"<tr class='sample-row' data-row-id='{esc(row_id)}' "
+                f"title='条件记录：{esc(row_id)}'>{''.join(cells)}</tr>"
+            )
     innovation = analysis_text(analysis.get("one_sentence_innovation")) if isinstance(analysis, dict) else "未提供"
     colspan = len(table_columns)
     footnotes = "".join(
@@ -995,7 +1023,7 @@ def article_block(data, batch_mode, index, table_columns):
         f"<summary>主数据与证据审查 · {esc(paper_id)} · {len(samples)} 组测量条件</summary>"
         "<div class='article-data-body'>"
         "<section class='data-section'>"
-        "<div class='section-title'><h2>主数据表</h2><p>每种化合物一行；RT/77 K、薄膜/溶液等条件以脚注区分</p></div>"
+        "<div class='section-title'><h2>主数据表</h2><p>每个测量条件一个子行；同一横行中的物理量属于同一条件记录</p></div>"
         f"{data_table(samples, analysis, table_columns)}</section>"
         f"{review_and_evidence_panel(working_data)}"
         "</div></details></article>"
@@ -1088,13 +1116,14 @@ h1{{max-width:1100px;margin:0;font-size:clamp(25px,3vw,38px);line-height:1.25}}
 .analysis-missing{{background:#fff;border:1px dashed var(--line);padding:16px;color:var(--muted)}}
 .data-table-wrap{{overflow:auto;background:#fff;border:1px solid #bdc8d6;border-radius:8px;box-shadow:0 4px 14px rgba(24,34,53,.035)}}
 .data-table{{border-collapse:separate;border-spacing:0;min-width:1680px;width:100%;font-size:12pt;line-height:1.45}}
-.data-table th,.data-table td{{padding:10px 9px;border-right:1px solid #d6dee8;border-bottom:1px solid #d6dee8;text-align:center;vertical-align:middle;min-width:88px;max-width:230px;overflow-wrap:anywhere}}
+.data-table th,.data-table td{{padding:10px 9px;border-right:1px solid #d6dee8;border-bottom:1px solid #d6dee8;text-align:center;vertical-align:top;min-width:88px;max-width:230px;overflow-wrap:anywhere}}
 .data-table thead th{{position:sticky;top:0;z-index:3;background:#edf3fa;color:#233a57;font-size:12pt;line-height:1.25;font-weight:800;white-space:nowrap}}
 .data-table thead th.metric-header{{font-family:"{metric_header_style['font_family']}",serif;font-size:{metric_header_style['font_size']};font-weight:{metric_header_style['font_weight']};color:{metric_header_style['color']}}}.metric-header .metric-symbol{{font-style:{metric_symbol_style};font-weight:{metric_header_style['font_weight']}}}.metric-header sub{{font-style:{metric_subscript_style};font-weight:{metric_header_style['font_weight']}}}
 .data-table tr:last-child>*{{border-bottom:0}}.data-table tr>*:last-child{{border-right:0}}
 .data-table tbody tr:nth-child(even) td,.data-table tbody tr:nth-child(even) th{{background:#fafbfd}}
 .data-table tbody tr:hover td,.data-table tbody tr:hover th{{background:#f1f7ff}}
-.data-table .compound-cell{{position:sticky;left:0;z-index:2;min-width:130px;background:#fff;font-size:12pt;font-weight:800;color:#172b4d}}
+.data-table .compound-cell{{position:sticky;left:0;z-index:2;min-width:130px;background:#fff;font-size:12pt;font-weight:800;color:#172b4d;vertical-align:middle}}
+.data-table .sample-row+ .sample-row td{{border-top:1px dashed #e5eaf0}}
 .data-table thead th:first-child{{left:0;z-index:5}}
 .synthesis-row td,.innovation-row td{{text-align:left;padding:13px 16px;white-space:normal;max-width:none;background:#fbfcfe;font-size:12pt;color:#334155}}.condition-footnotes+.synthesis-row td{{border-top:2px solid #9fb2c8}}.synthesis-row b,.innovation-row b{{color:var(--blue)}}
 .condition-ref{{margin-left:2px;color:#7a4d00;font-size:9px;font-weight:400}}.condition-values{{white-space:normal}}.value-citation{{display:inline-block;white-space:nowrap}}

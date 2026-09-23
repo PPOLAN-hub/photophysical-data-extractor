@@ -7,7 +7,7 @@
 GitHub 不等于命令行已经获得私有仓库访问权限。不要把 Personal Access Token
 写入命令、README、聊天记录或仓库。
 
-本次豆包发行支持更新后，当前稳定版本为 `skill-v1.4.2`。
+本次多格式交付与强制归档配置更新发布后，当前稳定版本为 `skill-v1.5.0`。
 
 ### Claude Code
 
@@ -88,13 +88,13 @@ DSH 的用户共享扫描范围内，因此无需重复安装。
 
 适用于带“工作”模式和“插件 · 技能 · 伙伴”入口的豆包桌面端。不要使用
 `--agent doubao`；从 Release 下载
-`photophysical-data-extractor-doubao-skill-v1.4.2.zip`，然后：
+`photophysical-data-extractor-doubao-skill-v1.5.0.zip`，然后：
 
 1. 切换到“工作”；
 2. 打开“插件 · 技能 · 伙伴”；
 3. 选择“新建/上传技能”并上传 ZIP；
 4. 返回工作对话，从输入框下方“技能”选择 `photophysical-data-extractor`；
-5. 先运行环境自检提示词，通过后再上传论文正文和 SI。
+5. 先运行环境自检和首次输出/Obsidian 配置提示词，通过后再上传论文正文和 SI。
 
 该 ZIP 经过白名单打包，`SKILL.md` 直接位于压缩包根目录；不要使用 GitHub
 自动生成且可能多套一层目录的 Source code ZIP。完整安装步骤、环境自检提示词和
@@ -107,7 +107,7 @@ DSH 的用户共享扫描范围内，因此无需重复安装。
 
 ✨ 面向有机材料光物理与电子结构论文的证据可溯源数据抽取 Skill，简称 **PDE**。除发光光谱、寿命和效率外，默认抽取并显示 HOMO、LUMO、S1、T1、ΔEST、CPL 的 g_lum 与 CD/ECD 的 g_abs。
 
-单篇论文上传正文及 Supporting Information（SI）后，输入 `PDE` 即可；多篇论文使用 `PDEmore`。Agent 会自动完成论文读取、数据抽取、证据关联、JSON 校验和 HTML 报告生成；用户不需要手工执行脚本或自行制作 HTML。
+单篇论文上传正文及 Supporting Information（SI）后，输入 `PDE` 即可；多篇论文使用 `PDEmore`。首次正式运行前必须配置统一输出根目录，以及 Obsidian Vault、归档域和归档约定文件。完整 JSON、HTML、Word 统一存储在输出根目录的任务文件夹中；Obsidian 只保存报告卡和链接。Agent 会自动完成论文读取、数据抽取、证据关联、校验、渲染和归档；用户不需要手工执行脚本。
 
 ## ⚡ 主要能力
 
@@ -119,7 +119,7 @@ DSH 的用户共享扫描范围内，因此无需重复安装。
 - 提取 DOI、题目、KOI、逻辑骨架和一句话创新点；
 - 为具体数值和综合结论建立可跳转证据；
 - 自动标记冲突、低置信度项目和需要人工复核的内容；
-- 自动生成经过校验的 JSON 和便于比较、溯源的 HTML；
+- 自动生成经过校验的 JSON、条件对齐 HTML、Word 和 Obsidian Markdown 报告卡；
 - 支持修改主数据表的物理量列、顺序、名称和表头样式。
 
 ## 📄 输出
@@ -129,6 +129,7 @@ DSH 的用户共享扫描范围内，因此无需重复安装。
 ```text
 paper_data.json
 report.html
+report.docx
 ```
 
 批量任务还会生成合并报告：
@@ -136,9 +137,10 @@ report.html
 ```text
 batch_report.json
 batch_report.html
+batch_report.docx
 ```
 
-`paper_data.json` 是唯一数据源，HTML 由当前 JSON 自动生成。不要手工修改 HTML。
+`paper_data.json` 是唯一数据源，HTML、Word 和 Obsidian Markdown 均由当前 JSON 确定性生成。正式文件只能保存在首次配置的输出根目录下，Obsidian Markdown 仅负责归档映射。不要手工修改成品来纠正数据。
 
 ## 🚀 调用
 
@@ -154,7 +156,7 @@ PDE
 PDE，重点核对 77 K 数据和 SI 中的寿命表格。
 ```
 
-Agent 应自行完成数据抽取、验证和 HTML 渲染，只向用户交付最终文件及必要的人工复核提醒。
+Agent 应自行完成数据抽取、验证、多格式渲染和归档，只向用户交付最终文件及必要的人工复核提醒。`source_index.json` 与 `bibliography.json` 等过程文件放入 `_work/`，不得作为最终产物散落输出。
 
 同时处理多篇论文时，按下一节命名文件并输入：
 
@@ -282,4 +284,5 @@ k_isc, k_risc, k_rp, knr_p
 - [JSON 数据结构](references/data-schema.md)
 - [批量输入规范](references/batch-input.md)
 - [HTML 报告样式规则](references/html-report-style.md)
+- [Obsidian 归档集成](references/archive-integration.md)
 - [配置与故障排查](references/usage-guide.md)

@@ -53,6 +53,44 @@ def main(json_path, html_path, config_path=None):
     expected = expected_highlights(documents)
     problems = []
 
+    expected_sample_rows = sum(len(document.get("samples", [])) for document in documents)
+    actual_sample_rows = len(re.findall(r"<tr class=['\"]sample-row['\"]", source))
+    if actual_sample_rows != expected_sample_rows:
+        problems.append(
+            f"sample-condition row mismatch: expected {expected_sample_rows}, found {actual_sample_rows}"
+        )
+    rendered_rows = {}
+    for row_id, body in re.findall(
+        r"<tr class=['\"]sample-row['\"] data-row-id=['\"]([^'\"]+)['\"][^>]*>(.*?)</tr>",
+        source,
+        flags=re.DOTALL,
+    ):
+        rendered_rows.setdefault(row_id, []).append(body)
+    for document in documents:
+        for sample in document.get("samples", []):
+            row_id = str(sample.get("row_id") or "未标注")
+            bodies = rendered_rows.get(row_id, [])
+            if not bodies:
+                problems.append(f"missing rendered sample-condition row: {row_id}")
+                continue
+            expected_evidence = [
+                field.get("evidence_id")
+                for field in sample.get("fields", {}).values()
+                if isinstance(field, dict) and field.get("status") == "reported" and field.get("evidence_id")
+            ]
+            body = next(
+                (candidate for candidate in bodies if all(f"[{item}]" in candidate for item in expected_evidence)),
+                bodies[0],
+            )
+            for name, field in sample.get("fields", {}).items():
+                if not isinstance(field, dict) or field.get("status") != "reported":
+                    continue
+                evidence_id = field.get("evidence_id")
+                if evidence_id and f"[{evidence_id}]" not in body:
+                    problems.append(
+                        f"sample-condition row {row_id} does not contain {name} evidence {evidence_id}"
+                    )
+
     table_columns, _ = render_html.load_report_config(config_path)
     for name, label, group in table_columns:
         if group != "fields" or name == "emission_assignment":

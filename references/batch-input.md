@@ -21,12 +21,12 @@ The digits are the pairing key and must match exactly, including zero padding. F
 
 ## Batch workflow
 
-1. Run `scripts/build_batch_manifest.py INPUT_DIR batch_manifest.json`.
+1. Run `scripts/prepare_output_dir.py --mode batch --topic <topic>` and place the manifest under the returned task `_work/` directory; then run `scripts/build_batch_manifest.py INPUT_DIR <work-dir>/batch_manifest.json`.
 2. Stop on duplicate main files, duplicate SI files, an SI without a main paper, or an ambiguous role.
 3. Permit a main PDF without SI, but mark `si_status: missing` and never claim SI coverage.
-4. Process one manifest entry at a time into `outputs/<paper_id>/paper_data.json` and `report.html`.
+4. Process one manifest entry at a time into `<task-dir>/outputs/<paper_id>/paper_data.json`, `report.html`, and `report.docx`.
 5. Keep sample Row IDs local to a paper (`S001`, `S002`, ...). The globally unique row key is `<paper_id>:<row_id>`.
-6. In the human-facing consolidated table, create one visual row per `<paper_id>:<compound>`. Place all reported film/solution and RT/77 K values in the shared metric columns and distinguish them with condition footnotes. Do not merge the same compound across different papers solely because names match.
+6. In the human-facing consolidated table, create one condition subrow per JSON sample record and namespace it by paper. Vertically merge only the compound label within that paper. Do not merge the same compound across different papers solely because names match.
 7. When consolidating records, retain `paper_id`, DOI, and every global Row ID behind that visual row.
 
 ## Consolidated HTML

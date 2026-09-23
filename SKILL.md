@@ -1,13 +1,13 @@
 ---
 name: photophysical-data-extractor
-description: Extract evidence-traceable photophysical and electronic-structure data, article KOI, innovation, and logical structure from organic-material paper PDFs and their Supporting Information, then automatically produce validated JSON and HTML review reports. Invoke for one paper whenever the user says "PDE" and for multiple papers whenever the user says "PDEmore". Also use for fluorescence, phosphorescence, RTP, afterglow, delayed fluorescence, TADF, persistent luminescence, PLQY, lifetime, spectra, CPL/CD dissymmetry factors, host-matrix, HOMO, LUMO, S1/T1 energies, singlet-triplet gaps, rate constants, deterministic main-SI pairing, and batch literature organization where every value or synthesized claim must link to source evidence.
+description: Extract evidence-traceable photophysical and electronic-structure data, article KOI, innovation, and logical structure from organic-material paper PDFs and their Supporting Information, then produce validated JSON, condition-aligned HTML, Word, and configured Obsidian archive cards. Invoke for one paper whenever the user says "PDE" and for multiple papers whenever the user says "PDEmore". Also use for fluorescence, phosphorescence, RTP, afterglow, delayed fluorescence, TADF, persistent luminescence, PLQY, lifetime, spectra, CPL/CD dissymmetry factors, host-matrix, HOMO, LUMO, S1/T1 energies, singlet-triplet gaps, rate constants, deterministic main-SI pairing, and batch literature organization where every value or synthesized claim must link to source evidence.
 ---
 
 # Photophysical Data Extractor
 
-Extract evidence, not plausible values. Accept one organic photophysical paper PDF and optional SI, or a deterministically paired batch; write canonical JSON and render HTML audit reports. Cover prompt fluorescence as well as long-lived emission while keeping every mechanism and measurement condition distinct.
+Extract evidence, not plausible values. Accept one organic photophysical paper PDF and optional SI, or a deterministically paired batch; write canonical JSON and deterministically render HTML, Word, and Obsidian archive views from it. Cover prompt fluorescence as well as long-lived emission while keeping every mechanism and measurement condition distinct.
 
-Treat `PDE` as the single-paper invocation keyword. A single-paper upload may contain a main PDF plus one SI PDF with arbitrary filenames; treat them as one article set, distinguish main and SI from their document contents, and do not ask the user to rename or pair them. Treat `PDEmore` as the multi-paper invocation keyword and apply the deterministic batch naming rules below. Once invoked, complete extraction, JSON validation, and HTML rendering autonomously. Never ask the user to run validator or renderer commands.
+Treat `PDE` as the single-paper invocation keyword. A single-paper upload may contain a main PDF plus one SI PDF with arbitrary filenames; treat them as one article set, distinguish main and SI from their document contents, and do not ask the user to rename or pair them. Treat `PDEmore` as the multi-paper invocation keyword and apply the deterministic batch naming rules below. Once local output and archive configuration exists, complete extraction, validation, rendering, preview, and archiving autonomously. Never ask the user to run validator or renderer commands.
 
 ## Python runtime
 
@@ -15,14 +15,21 @@ Require Python 3.9 or newer. If the ignored `runtime_config.local.json` exists, 
 
 ## Required deliverables
 
-Create these files beside the input paper:
+Before any formal extraction, load the confirmed `output_root` from the local configuration and run `scripts/prepare_output_dir.py` to create the task directory. Never write formal deliverables beside uploaded PDFs, in the current working directory, or inside the Obsidian Vault. Put transient `source_index.json` and `bibliography.json` under the task `_work/` subdirectory and expose only validated deliverables:
 
 - `paper_data.json`: source of truth.
 - `report.html`: generated only by `scripts/render_html.py`.
+- `report.docx`: generated only by `scripts/render_docx.py`.
 
-For a batch, also create `batch_report.json` with a `paper_data_files` list and render one consolidated `batch_report.html` after every per-paper JSON passes validation.
+For a batch, also create `batch_report.json` with a `paper_data_files` list and render one consolidated `batch_report.html` and `batch_report.docx` after every per-paper JSON passes validation.
 
-Run the read-only `scripts/audit_extraction.py paper_data.json`, resolve or record its review candidates, then run `scripts/validate_extraction.py paper_data.json` before rendering and `scripts/validate_report_html.py paper_data.json report.html [custom_report_config.json]` after rendering. The audit script may identify weight-sum, cross-source-value, orphan-evidence, or row-reference candidates but must never modify canonical data or decide which conflicting value is correct. Pass the same optional config to the renderer and HTML validator. Do not hand-edit or independently recreate `report.html`; always use the bundled renderer so display rules remain deterministic.
+Run the read-only `scripts/audit_extraction.py paper_data.json`, resolve or record its review candidates, then run `scripts/validate_extraction.py paper_data.json` before rendering. After rendering, run `scripts/validate_report_html.py` and `scripts/validate_report_docx.py`. The audit script may identify weight-sum, cross-source-value, orphan-evidence, or row-reference candidates but must never modify canonical data or decide which conflicting value is correct. Do not hand-edit or independently recreate reports; always use the bundled renderers so display rules remain deterministic.
+
+## Mandatory Obsidian configuration
+
+Before the first formal `PDE` or `PDEmore` extraction, resolve the local config in this order: explicit `--archive-config`, `~/.pde/archive.json`, then `<current-working-directory>/.pde-archive.json`. If none exists, stop before extraction and guide the user through `scripts/configure_archive.py`. The user MUST select a persistent output root outside the Vault, a Vault root, a relative PDE archive directory, and a readable archive-convention file. Validate both locations with actual write/delete probes, display all four selected paths, and save only after explicit confirmation.
+
+Read `references/archive-integration.md` whenever configuring or writing the archive. Every run MUST reread the selected convention file and verify its saved SHA-256. A changed convention requires reconfiguration and a new real-data preview. Run `scripts/archive_report.py ... --preview` without writing the Vault; after the user confirms that first preview, run it with `--yes`. Archive Markdown is a compact index/read card, not a replacement for the complete HTML, DOCX, or JSON. Never hard-code a personal Vault path in tracked files.
 
 Use two deterministic preprocessing scripts before semantic extraction:
 
@@ -43,15 +50,16 @@ Use the bundled `report_config.json` as the default main-table physical-column c
 4. Add field-level evidence before adding a specific value, including compound, host/matrix, concentration, sample state, and every measurement condition. Extract HOMO, LUMO, S1, T1, ΔEST, and CPL/CD dissymmetry factors when reported; separate experimental and calculated energies, distinguish `g_lum` from `g_abs`, and retain method, medium, sign, and measurement wavelength. Use short quotes and a resolvable page/table/figure/SI location.
 5. Extract paper-level KOI, a one-sentence innovation, and a problem-to-application logic skeleton. Store these once under `article_analysis`; link every synthesized item to paper-level evidence with `row_id: PAPER`. End the one-sentence innovation with the DOI and the verified citation, or explicitly label a registry-formatted citation as provisional when publisher verification failed.
 6. Mark missing information with a status, not a guessed value. Record cross-source conflicts and manual-review items.
-7. Validate JSON and render HTML. In the main table, show each solid formulation's Host and doping ratio once; keep solution solvent/concentration out of those two cells and identify solution, RT/77 K, and doped-film conditions through metric footnotes. For doped-matrix phosphorescence values, render room-temperature λP, τP, and ΦP in `#D9001B`; render 77 K counterparts in `#0000FF`; bold and underline the longest room-temperature τP and highest room-temperature ΦP, and bold the longest 77 K τP. Treat `RT`, `RT (ambient)`, `room temperature`, `ambient temperature`, `室温`, and 293/298/300 K as room temperature. Run the HTML validator and report the output paths.
+7. Validate JSON and render HTML plus Word. In the HTML main table, render one subrow per sample/condition record and vertically merge only the compound label; every value on a horizontal subrow must come from that same JSON record. Keep solution solvent/concentration out of solid formulation cells and identify all conditions through footnotes. Preserve the existing RT/77 K highlighting rules. Validate both formats.
+8. Confirm that JSON, HTML, and DOCX all reside below the configured output root. Render an Obsidian Markdown preview from the same JSON, validate it with `scripts/validate_archive_md.py`, then archive it only after the mandatory first-use confirmation. Report the task output directory, final deliverable paths, and archive path, not transient work files.
 
 ## Batch workflow
 
 1. Require either `P01.pdf` with `S01.pdf` (recommended) or `1main.pdf` with `1SI.pdf`. Match the complete digit string and naming scheme exactly; never pair by title or upload order. Read `references/batch-input.md`.
 2. Run `scripts/build_batch_manifest.py INPUT_DIR batch_manifest.json`; stop on pairing errors.
 3. Process each manifest entry independently. Never carry values, evidence IDs, or SI content from one paper into another.
-4. Write each result under `outputs/<paper_id>/`. Keep Row IDs local; use `<paper_id>:<row_id>` as the global row key when consolidating.
-5. Build `batch_report.json` from the validated per-paper JSON paths and run `scripts/render_html.py batch_report.json batch_report.html [custom_report_config.json]`. The renderer namespaces repeated evidence IDs automatically.
+4. Write each result under `<task-dir>/outputs/<paper_id>/`. Keep Row IDs local; use `<paper_id>:<row_id>` as the global row key when consolidating.
+5. Build `batch_report.json` from the validated per-paper JSON paths and render `batch_report.html` plus `batch_report.docx`. The HTML renderer namespaces repeated evidence IDs automatically. Create exactly one Obsidian Markdown card for the batch run.
 
 ## Evidence rules
 
@@ -63,4 +71,4 @@ Use the bundled `report_config.json` as the default main-table physical-column c
 
 ## Handoff format
 
-Use only the JSON schema fields in the reference. Preserve source units in `raw_value` and `raw_unit`; normalized fields are optional and must include conversion evidence. HTML is a read-only presentation of the JSON, not a second extraction pass.
+Use only the JSON schema fields in the reference. Preserve source units in `raw_value` and `raw_unit`; normalized fields are optional and must include conversion evidence. HTML, Word, and Obsidian Markdown are read-only presentations of the JSON, never additional extraction passes.
