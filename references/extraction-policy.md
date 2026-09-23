@@ -14,6 +14,8 @@
 - Extract HOMO, LUMO, S1, T1, and the S1–T1 energy gap whenever reported. Search both experimental/electrochemical sections and theoretical-calculation tables or figures. Keep experimental and calculated values on separate records and label the determination method, computational level, and medium in `measurement_context`.
 - Do not calculate `delta_e_st` from energy values obtained with different methods, media, geometries, or phases. When the paper does not explicitly report the gap, calculate `E(S1) - E(T1)` only from a matched pair, use evidence type `calculated_from_reported_values`, and state the formula plus both input evidence IDs.
 - Do not treat an optical gap, oxidation-derived HOMO, calculated orbital energy, or excited-state energy as interchangeable. Preserve the sign of HOMO/LUMO energies and the author's state character such as `1CT`, `1LE`, or `3LE` in `measurement_context` or notes.
+- Keep the signed CPL luminescence dissymmetry factor `g_lum` separate from the CD/ECD absorption dissymmetry factor `g_abs`. Never convert one into the other, never discard the sign, and never report a source value written as `|g|` as though its handedness were known.
+- A dissymmetry factor is dimensionless, not a percentage. Preserve the author's formula or polarization convention when reported. Record the wavelength of the quoted value or maximum, because a peak `g` value without its spectral position is incomplete context. Keep solution, film, crystal, aggregate, temperature, excitation, and enantiomer/sample identity distinct.
 
 ## Evidence location format
 
@@ -31,8 +33,8 @@ Keep the ledger compact. For high-confidence table evidence, put the exact table
 
 ## Search terms
 
-Search at minimum: `room-temperature phosphorescence`, `RTP`, `organic phosphorescence`, `afterglow`, `persistent luminescence`, `delayed emission`, `delayed fluorescence`, `TADF`, `long-lived emission`, `lifetime`, `transient`, `time-resolved`, `PLQY`, `quantum yield`, `host`, `matrix`, `doped`, `air`, `nitrogen`, `oxygen`, `vacuum`, `77 K`, `excitation`, `delay`, `gate`, `HOMO`, `LUMO`, `energy level`, `singlet`, `triplet`, `S1`, `T1`, `ΔEST`, `energy gap`, `cyclic voltammetry`, `DFT`, `TD-DFT`, `NTO`, `kISC`, `kRISC`, `kr`, and `knr`.
+Search at minimum: `room-temperature phosphorescence`, `RTP`, `organic phosphorescence`, `afterglow`, `persistent luminescence`, `delayed emission`, `delayed fluorescence`, `TADF`, `long-lived emission`, `lifetime`, `transient`, `time-resolved`, `PLQY`, `quantum yield`, `CPL`, `circularly polarized luminescence`, `CP-EL`, `luminescence dissymmetry`, `dissymmetry factor`, `g_lum`, `glum`, `CD`, `ECD`, `circular dichroism`, `absorption dissymmetry`, `g_abs`, `gabs`, `host`, `matrix`, `doped`, `air`, `nitrogen`, `oxygen`, `vacuum`, `77 K`, `excitation`, `delay`, `gate`, `HOMO`, `LUMO`, `energy level`, `singlet`, `triplet`, `S1`, `T1`, `ΔEST`, `energy gap`, `cyclic voltammetry`, `DFT`, `TD-DFT`, `NTO`, `kISC`, `kRISC`, `kr`, and `knr`.
 
 ## Required manual-review items
 
-List SI-only values, figure estimates, source conflicts, ambiguous yield/lifetime definitions, and likely DF/TADF/excimer/aggregate/impurity confounders. Name the five highest-value source locations for a human check when applicable.
+List SI-only values, figure estimates, source conflicts, ambiguous yield/lifetime definitions, unsigned `|g|` values, dissymmetry factors without a reported wavelength, and likely DF/TADF/excimer/aggregate/impurity confounders. Name the five highest-value source locations for a human check when applicable.

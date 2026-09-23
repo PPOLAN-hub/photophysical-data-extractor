@@ -6,6 +6,8 @@
     {"field": "e_t1", "parts": [{"symbol": "E", "subscript": "T1"}]},
     {"field": "delta_e_st", "parts": [{"symbol": "ΔE", "subscript": "ST"}]},
     {"field": "phi_pl", "parts": [{"symbol": "Φ", "subscript": "PL"}]},
+    {"field": "g_lum", "parts": [{"symbol": "g", "subscript": "lum"}]},
+    {"field": "g_abs", "parts": [{"symbol": "g", "subscript": "abs"}]},
     {"field": "lambda_f", "parts": [{"symbol": "λ", "subscript": "F"}]},
     {"field": "tau_f", "parts": [{"symbol": "τ", "subscript": "F"}]},
     {"field": "phi_f", "parts": [{"symbol": "Φ", "subscript": "F"}]},

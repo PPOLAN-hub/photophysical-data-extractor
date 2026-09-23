@@ -7,6 +7,7 @@ from pathlib import Path
 VALID_TYPES = {"direct_text", "table_value", "figure_estimate", "calculated_from_reported_values", "author_assignment"}
 VALID_STATUS = {"reported", "not_reported", "uncertain"}
 ENERGY_FIELDS = {"e_homo", "e_lumo", "e_s1", "e_t1", "e_t2", "delta_e_st"}
+DISSYMMETRY_FIELDS = {"g_lum": "luminescence", "g_abs": "absorption"}
 
 
 def validate_analysis_item(label, item, ledger, problems):
@@ -67,6 +68,17 @@ def main(path_text: str) -> int:
                         problems.append(f"{row_id}.{name}: measurement_context.determination must be experimental or calculated")
                     if not str(field.get("raw_unit") or "").strip():
                         problems.append(f"{row_id}.{name}: reported energy needs raw_unit")
+                if name in DISSYMMETRY_FIELDS and status == "reported":
+                    context = field.get("measurement_context")
+                    dissymmetry_type = str(context.get("dissymmetry_type", "")).strip().lower() if isinstance(context, dict) else ""
+                    expected_type = DISSYMMETRY_FIELDS[name]
+                    if dissymmetry_type != expected_type:
+                        problems.append(
+                            f"{row_id}.{name}: measurement_context.dissymmetry_type must be {expected_type}"
+                        )
+                    raw_unit = str(field.get("raw_unit") or "").strip().lower()
+                    if "%" in raw_unit or "percent" in raw_unit:
+                        problems.append(f"{row_id}.{name}: dissymmetry factor is dimensionless, not percent")
     analysis = data.get("article_analysis")
     if analysis is not None:
         if not isinstance(analysis, dict):

@@ -1,0 +1,84 @@
+{
+  "paper": {
+    "paper_id": "CPL-SMOKE",
+    "title": "CPL smoke test",
+    "doi": "10.0000/example"
+  },
+  "samples": [
+    {
+      "row_id": "R1",
+      "identity": {
+        "compound": {
+          "status": "reported",
+          "raw_value": "(R)-Example",
+          "raw_unit": null,
+          "evidence_id": "E1"
+        }
+      },
+      "conditions": {},
+      "fields": {
+        "g_lum": {
+          "status": "reported",
+          "raw_value": "+2.1 × 10^-3",
+          "raw_unit": null,
+          "evidence_id": "E2",
+          "measurement_context": {
+            "dissymmetry_type": "luminescence",
+            "method": "CPL",
+            "wavelength": "520 nm",
+            "excitation": "365 nm"
+          }
+        },
+        "g_abs": {
+          "status": "reported",
+          "raw_value": "-8.0 × 10^-4",
+          "raw_unit": "dimensionless",
+          "evidence_id": "E3",
+          "measurement_context": {
+            "dissymmetry_type": "absorption",
+            "method": "ECD",
+            "wavelength": "410 nm"
+          }
+        }
+      },
+      "notes": ""
+    }
+  ],
+  "evidence_ledger": [
+    {
+      "evidence_id": "E1",
+      "row_id": "R1",
+      "field_name": "compound",
+      "extracted_value": "(R)-Example",
+      "location": "Main PDF p. 1",
+      "quote": "the R enantiomer",
+      "type": "direct_text",
+      "confidence": "high",
+      "manual_check_note": ""
+    },
+    {
+      "evidence_id": "E2",
+      "row_id": "R1",
+      "field_name": "g_lum",
+      "extracted_value": "+2.1 × 10^-3 at 520 nm",
+      "location": "Main PDF p. 2, Fig. 2",
+      "quote": "CPL maximum at 520 nm",
+      "type": "direct_text",
+      "confidence": "high",
+      "manual_check_note": ""
+    },
+    {
+      "evidence_id": "E3",
+      "row_id": "R1",
+      "field_name": "g_abs",
+      "extracted_value": "-8.0 × 10^-4 at 410 nm",
+      "location": "Main PDF p. 2, Fig. 1",
+      "quote": "ECD band at 410 nm",
+      "type": "direct_text",
+      "confidence": "high",
+      "manual_check_note": ""
+    }
+  ],
+  "manual_review": [],
+  "rate_calculations": []
+}

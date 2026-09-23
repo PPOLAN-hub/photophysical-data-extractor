@@ -33,6 +33,8 @@ FIELD_LABELS = {
     "lambda_p": "λ<sub>P</sub>",
     "tau_p": "τ<sub>P</sub>",
     "phi_p": "Φ<sub>P</sub>",
+    "g_lum": "g<sub>lum</sub>",
+    "g_abs": "g<sub>abs</sub>",
     "e_homo": "E<sub>HOMO</sub>",
     "e_lumo": "E<sub>LUMO</sub>",
     "e_s1": "E<sub>S1</sub>",
@@ -49,6 +51,18 @@ PAPER_LABELS = {
     "paper_id": "文献 ID",
     "title": "题目",
     "doi": "DOI",
+    "authors": "作者",
+    "journal": "期刊",
+    "year": "年份",
+    "volume": "卷",
+    "issue": "期",
+    "article_number": "文章号",
+    "publisher": "出版社",
+    "publisher_url": "出版社页面",
+    "citation": "引用格式",
+    "citation_source": "引用来源",
+    "official_citation": "出版社官方引用",
+    "publisher_style_citation": "出版社样式引用",
     "journal_year": "期刊 / 年份",
     "main_pdf_reviewed": "主文已核对",
     "supporting_information_reviewed": "SI 已核对",
@@ -59,6 +73,7 @@ METRIC_ORDER = [
     "lambda_f", "tau_f", "phi_f",
     "lambda_df", "tau_df", "phi_df",
     "lambda_p", "tau_p", "phi_p",
+    "g_lum", "g_abs",
     "e_homo", "e_lumo", "e_s1", "e_t1", "e_t2", "delta_e_st",
     "afterglow_color", "afterglow_visible_time", "phi_pl",
     "k_isc", "k_risc", "k_rp", "knr_p",
@@ -94,6 +109,8 @@ def scientific_value(value):
         (r"\bphi_?df\b", "Φ<sub>DF</sub>"),
         (r"\bphi_?f\b", "Φ<sub>F</sub>"),
         (r"\bphi_?p\b", "Φ<sub>P</sub>"),
+        (r"\bg_?lum\b", "g<sub>lum</sub>"),
+        (r"\bg_?abs\b", "g<sub>abs</sub>"),
         (r"\bΦ_?PL\b", "Φ<sub>PL</sub>"),
         (r"\bΦ_?DF\b", "Φ<sub>DF</sub>"),
         (r"\bΦ_?F\b", "Φ<sub>F</sub>"),
@@ -158,6 +175,12 @@ def context_text(field):
         "atmosphere": "气氛",
         "delay": "延迟",
         "gate_window": "门控",
+        "wavelength": "波长",
+        "dissymmetry_type": "不对称因子类型",
+        "method": "测量方法",
+        "medium": "介质",
+        "phase": "相态",
+        "convention": "偏振约定",
     }
     parts = [f"{labels.get(key, key)}：{esc(value)}" for key, value in context.items()]
     return "<div class='metric-context'>" + " · ".join(parts) + "</div>"
@@ -222,7 +245,7 @@ FIXED_TABLE_COLUMNS = [
 
 SUPPORTED_PHYSICAL_FIELDS = {
     "phi_pl", "lambda_f", "tau_f", "phi_f", "lambda_df", "tau_df", "phi_df",
-    "lambda_p", "tau_p", "phi_p", "k_isc", "k_risc", "k_rp", "knr_p",
+    "lambda_p", "tau_p", "phi_p", "g_lum", "g_abs", "k_isc", "k_risc", "k_rp", "knr_p",
     "e_homo", "e_lumo", "e_s1", "e_t1", "e_t2", "delta_e_st",
 }
 
@@ -233,6 +256,8 @@ DEFAULT_PHYSICAL_QUANTITY_COLUMNS = [
     {"field": "e_t1", "parts": [{"symbol": "E", "subscript": "T1"}]},
     {"field": "delta_e_st", "parts": [{"symbol": "ΔE", "subscript": "ST"}]},
     {"field": "phi_pl", "parts": [{"symbol": "Φ", "subscript": "PL"}]},
+    {"field": "g_lum", "parts": [{"symbol": "g", "subscript": "lum"}]},
+    {"field": "g_abs", "parts": [{"symbol": "g", "subscript": "abs"}]},
     {"field": "lambda_f", "parts": [{"symbol": "λ", "subscript": "F"}]},
     {"field": "tau_f", "parts": [{"symbol": "τ", "subscript": "F"}]},
     {"field": "phi_f", "parts": [{"symbol": "Φ", "subscript": "F"}]},
@@ -371,6 +396,8 @@ def table_raw(name, field):
         return esc(short_assignment(value))
     if name == "host_matrix":
         return esc(short_host(value))
+    if name in {"g_lum", "g_abs"}:
+        value = str(field.get("raw_value") if isinstance(field, dict) else value).strip()
     if name in {"phi_pl", "phi_f", "phi_df", "phi_p"}:
         match = re.search(r"\(([0-9.]+\s*%)\)", value)
         if match:
@@ -473,10 +500,28 @@ def condition_descriptor(sample, field=None):
             parts.append("实验")
         elif determination == "calculated":
             parts.append("计算")
-        for key in ("method", "medium", "phase", "state_character"):
+        for key in (
+            "method", "medium", "phase", "state_character", "wavelength",
+            "excitation", "dissymmetry_type", "convention",
+        ):
             value = str(context.get(key) or "").strip()
-            if value and value.lower() not in "；".join(parts).lower():
-                parts.append(value)
+            if not value:
+                continue
+            if key == "wavelength":
+                rendered = "g 波长=" + value
+            elif key == "excitation":
+                rendered = "λex=" + value
+            elif key == "dissymmetry_type":
+                rendered = {
+                    "luminescence": "发光不对称因子",
+                    "absorption": "吸收不对称因子",
+                }.get(value.lower(), value)
+            elif key == "convention":
+                rendered = "偏振约定=" + value
+            else:
+                rendered = value
+            if rendered.lower() not in "；".join(parts).lower():
+                parts.append(rendered)
     return "；".join(parts) or "条件未完整报告"
 
 

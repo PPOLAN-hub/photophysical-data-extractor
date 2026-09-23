@@ -2,6 +2,8 @@
 
 `paper_data.json` contains one object with `paper`, `article_analysis`, `samples`, `evidence_ledger`, `manual_review`, and `rate_calculations` keys. `paper.paper_id` is required in batch mode and must equal the manifest ID.
 
+`paper` should include `title`, `doi`, `authors`, `journal`, `year`, `volume`, `issue`, `article_number`, `publisher`, `publisher_url`, `citation`, and `citation_source` when available. `publisher_style_citation` is a deterministic journal-style rendering of publisher-deposited registry metadata. Use `official_citation` only when the exact citation was retrieved from or verified against the official publisher page. A citation formatted only from Crossref metadata remains valid provenance-bearing metadata but must not be labeled official.
+
 `article_analysis` is paper-level and must not be copied into every sample row. Use this shape:
 
 ```json
@@ -35,7 +37,26 @@ Every entry in `identity`, `conditions`, and `fields` uses this shape:
 {"status":"reported","raw_value":"487","raw_unit":"nm","evidence_id":"E012","measurement_context":{"excitation":"355 nm","temperature":"RT"}}
 ```
 
-`measurement_context` is optional and records conditions specific to one field when they differ from the sample-level conditions. Use `status: not_reported` or `status: uncertain` with `raw_value: null` when appropriate. Field names include `emission_assignment`, `afterglow_color`, `afterglow_visible_time`, `phi_pl`, `lambda_f`, `tau_f`, `phi_f`, `lambda_df`, `tau_df`, `phi_df`, `lambda_p`, `tau_p`, `phi_p`, `e_homo`, `e_lumo`, `e_s1`, `e_t1`, `e_t2`, `delta_e_st`, `k_isc`, `k_risc`, `k_rp`, and `knr_p`.
+`measurement_context` is optional and records conditions specific to one field when they differ from the sample-level conditions. Use `status: not_reported` or `status: uncertain` with `raw_value: null` when appropriate. Field names include `emission_assignment`, `afterglow_color`, `afterglow_visible_time`, `phi_pl`, `lambda_f`, `tau_f`, `phi_f`, `lambda_df`, `tau_df`, `phi_df`, `lambda_p`, `tau_p`, `phi_p`, `g_lum`, `g_abs`, `e_homo`, `e_lumo`, `e_s1`, `e_t1`, `e_t2`, `delta_e_st`, `k_isc`, `k_risc`, `k_rp`, and `knr_p`.
+
+`g_lum` is the signed, dimensionless luminescence dissymmetry factor obtained from CPL or circularly polarized electroluminescence. `g_abs` is the signed, dimensionless absorption dissymmetry factor obtained from CD/ECD. Never place an absolute magnitude in `raw_value` unless the source explicitly reports only `|g|`; in that case preserve the bars or wording and flag the missing sign for review. Use `raw_unit: null`, `"1"`, `"dimensionless"`, or the source's explicit unitless notation, never percent. Require `measurement_context.dissymmetry_type` to be `"luminescence"` for `g_lum` and `"absorption"` for `g_abs`. Record the wavelength in `measurement_context.wavelength` and the measurement method in `measurement_context.method` when reported; also retain excitation, enantiomer/sample identity, medium, phase, temperature, and instrument convention when available.
+
+```json
+{
+  "g_lum": {
+    "status": "reported",
+    "raw_value": "+2.1 × 10^-3",
+    "raw_unit": null,
+    "evidence_id": "E045",
+    "measurement_context": {
+      "dissymmetry_type": "luminescence",
+      "method": "CPL",
+      "wavelength": "520 nm",
+      "excitation": "365 nm"
+    }
+  }
+}
+```
 
 For every reported energy field, use `raw_unit: "eV"` when the source reports eV and include `measurement_context.determination` as `experimental` or `calculated`. Also record the method and medium when available, for example `{"determination":"calculated","method":"M06-2X/6-311G(d)","medium":"toluene"}` or `{"determination":"experimental","method":"cyclic voltammetry","medium":"ACN"}`. Keep experimental and calculated values as separate sample records so the HTML shows them on separate footnoted lines. Use `delta_e_st` for the author's S1–T1 gap. Use `e_t2` only when a higher triplet state is mechanistically relevant or explicitly requested; it is supported but not part of the default table.
 

@@ -26,7 +26,7 @@ npx skills add PPOLAN-hub/photophysical-data-extractor --skill photophysical-dat
 
 使用有仓库访问权限的 GitHub 账户下载该仓库的 ZIP 源码包；无需解压或重新压缩。在 Cherry Studio 的“设置 → 技能”中选择“从 ZIP 文件安装”，然后在目标 Agent 的技能设置中启用 `photophysical-data-extractor`。不要将 Personal Access Token 写入命令、聊天记录或仓库。
 
-✨ 面向有机材料光物理与电子结构论文的证据可溯源数据抽取 Skill，简称 **PDE**。除发光光谱、寿命和效率外，默认抽取并显示 HOMO、LUMO、S1、T1 与 ΔEST。
+✨ 面向有机材料光物理与电子结构论文的证据可溯源数据抽取 Skill，简称 **PDE**。除发光光谱、寿命和效率外，默认抽取并显示 HOMO、LUMO、S1、T1、ΔEST、CPL 的 g_lum 与 CD/ECD 的 g_abs。
 
 单篇论文上传正文及 Supporting Information（SI）后，输入 `PDE` 即可；多篇论文使用 `PDEmore`。Agent 会自动完成论文读取、数据抽取、证据关联、JSON 校验和 HTML 报告生成；用户不需要手工执行脚本或自行制作 HTML。
 
@@ -35,6 +35,7 @@ npx skills add PPOLAN-hub/photophysical-data-extractor --skill photophysical-dat
 - 支持单篇论文和多篇论文批量抽取；
 - 抽取化合物、Host/Matrix、掺杂比例、样品状态和测试条件；
 - 整理荧光、磷光/RTP、延迟荧光/TADF、余辉及速率常数；
+- 区分并提取带符号和波长条件的 CPL `g_lum` 与 CD/ECD `g_abs`；
 - 保留室温、77 K、溶液、掺杂膜、纯膜、晶体、粉末及不同气氛条件；
 - 提取 DOI、题目、KOI、逻辑骨架和一句话创新点；
 - 为具体数值和综合结论建立可跳转证据；
@@ -186,9 +187,9 @@ k_isc, k_risc, k_rp, knr_p
 
 ## 🖥️ 环境说明
 
-- Python 3.9 或更高版本；解释器候选顺序记录在 `runtime_config.json`；
+- Python 3.9 或更高版本；共享解释器候选顺序记录在 `runtime_config.json`，存在 `runtime_config.local.json` 时优先使用其中的本地候选；
 - Agent 必须能够读取论文文件、写入输出目录并运行 Skill 自带脚本；
-- 本机已配置优先使用 `D:\Tool\Pathon\python.exe`（Python 3.13.7）；若其他电脑不存在该路径，会自动尝试 Skill 内 `.venv`、`py -3` 或 `python3`；
+- 默认依次尝试 Skill 内 `.venv`、Windows `py -3` 或 macOS/Linux `python3`；机器专属解释器只写入不提交的 `runtime_config.local.json`；
 - 兼容依赖范围记录在 `requirements.txt`；当前实测环境为 `pypdf 6.10.2`、`PyMuPDF 1.27.2.2`、`PyYAML 6.0.3`；
 - Agent 应先运行 `scripts/check_environment.py` 自动检查解释器和依赖，不要求用户手工选择 Python；
 - Windows 下不得直接调用裸 `python`，以免命中无功能的 Microsoft Store 占位符；

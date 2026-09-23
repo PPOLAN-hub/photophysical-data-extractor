@@ -3,11 +3,6 @@
   "interpreter_candidates": [
     {
       "platform": "windows",
-      "path": "D:\\Tool\\Pathon\\python.exe",
-      "scope": "configured_for_this_machine"
-    },
-    {
-      "platform": "windows",
       "path": ".venv\\Scripts\\python.exe",
       "relative_to": "skill_directory"
     },

@@ -1,0 +1,10 @@
+# Normalize line endings so the skill behaves identically on Windows, macOS and Linux.
+* text=auto eol=lf
+
+# Binary assets must never be line-ending converted.
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.pdf binary
+*.zip binary

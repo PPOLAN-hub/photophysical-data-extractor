@@ -24,7 +24,7 @@
 <selected-python> -m pip install -r requirements.txt
 ```
 
-Agent 应按 `runtime_config.json` 顺序选择解释器，然后自动运行 `scripts/check_environment.py`。本机优先使用 `D:\Tool\Pathon\python.exe`；其他电脑会跳过不存在的机器专用路径并尝试可移植候选。Windows 下不要调用裸 `python`，因为它可能是 Microsoft Store 占位符。不得静默使用 Python 3.8 或更早版本，也不得把环境检查、JSON 校验或 HTML 渲染转交给用户手工执行。
+若存在 `runtime_config.local.json`，Agent 应先尝试其中的本地候选，再按 `runtime_config.json` 顺序选择解释器，然后自动运行 `scripts/check_environment.py`。默认共享候选为 Skill 内 `.venv`、Windows `py -3` 和 macOS/Linux `python3`。如需指定机器专属解释器，只能写入不提交的本地配置，不得修改共享配置加入绝对本地路径。Windows 下不要调用裸 `python`，因为它可能是 Microsoft Store 占位符。不得静默使用 Python 3.8 或更早版本，也不得把环境检查、JSON 校验或 HTML 渲染转交给用户手工执行。
 
 ### 安装 Skill
 
@@ -60,6 +60,8 @@ PDE，重点核对 77 K 数据和 SI 中的寿命表格。
 ```
 
 Agent 必须自动识别正文与 SI，并完成抽取、JSON 校验和 HTML 渲染，不得要求用户手工运行校验器或渲染器。
+
+Agent 会先运行 `scripts/index_sources.py`，一次性生成带 PDF 页码及表/图/方案锚点的 `source_index.json`；后续语义抽取复用该索引，只在图形或版式含义不清时重新查看原 PDF。随后运行 `scripts/fetch_bibliography.py` 获取 DOI、作者、期刊、卷期、年份、文章号和带来源状态的引用格式。出版社页面阻止自动访问时，引用必须标记为 Crossref 元数据格式化结果，并由 Agent 在官方页面复核后才能标为官方引用。
 
 多篇论文按批量命名规则准备后，输入：
 
