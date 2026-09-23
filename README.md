@@ -1,30 +1,102 @@
 # 🔬 Photophysical Data Extractor
 
-## 📦 安装
+## 📦 安装与升级
 
-需要 Node.js（用于运行 `npx`）以及 [skills CLI](https://www.npmjs.com/package/skills)。这是私有仓库：安装时使用的 GitHub 账户必须具有该仓库访问权限。
+本仓库为 GitHub Private repository。安装前请确认当前 Git/GitHub 凭据具有
+`PPOLAN-hub/photophysical-data-extractor` 的访问权限。仅在浏览器中登录
+GitHub 不等于命令行已经获得私有仓库访问权限。不要把 Personal Access Token
+写入命令、README、聊天记录或仓库。
+
+本次文档更新发布后，当前稳定版本为 `skill-v1.4.1`。
 
 ### Claude Code
 
+首次全局安装：
+
 ```bash
-npx skills add PPOLAN-hub/photophysical-data-extractor --skill photophysical-data-extractor --agent claude-code
+npx skills@latest add PPOLAN-hub/photophysical-data-extractor --skill photophysical-data-extractor --agent claude-code --global --yes
 ```
 
 ### Codex
 
-```bash
-npx skills add PPOLAN-hub/photophysical-data-extractor --skill photophysical-data-extractor --agent codex
-```
-
-### Kimi CLI
+首次全局安装：
 
 ```bash
-npx skills add PPOLAN-hub/photophysical-data-extractor --skill photophysical-data-extractor --agent kimi-cli
+npx skills@latest add PPOLAN-hub/photophysical-data-extractor --skill photophysical-data-extractor --agent codex --global --yes
 ```
 
-### Cherry Studio / 手工 ZIP 安装
+### 已安装版本升级
 
-使用有仓库访问权限的 GitHub 账户下载该仓库的 ZIP 源码包；无需解压或重新压缩。在 Cherry Studio 的“设置 → 技能”中选择“从 ZIP 文件安装”，然后在目标 Agent 的技能设置中启用 `photophysical-data-extractor`。不要将 Personal Access Token 写入命令、聊天记录或仓库。
+```bash
+npx skills@latest update photophysical-data-extractor --global --yes
+```
+
+升级后请开启新的 Agent 会话；如果宿主仍缓存旧 Skill，请重启对应 Agent。
+
+### WorkBuddy
+
+WorkBuddy 用户级安装目录：
+
+```text
+~/.workbuddy/skills/photophysical-data-extractor/
+```
+
+项目级安装目录：
+
+```text
+<workspace>/.workbuddy/skills/photophysical-data-extractor/
+```
+
+从有权限的 GitHub 账户下载本仓库，将完整目录复制到上述位置。安装后必须确认：
+
+```text
+~/.workbuddy/skills/photophysical-data-extractor/SKILL.md
+```
+
+直接存在，且同级保留 `scripts/`、`references/`、`requirements.txt` 和
+`runtime_config.json`。不要只复制 `SKILL.md`。安装或升级后刷新 Skill
+列表；若未出现，请重启 WorkBuddy。
+
+### DeepSeek Harness（dsh）
+
+DeepSeek Harness 用户级安装目录：
+
+```text
+~/.dsh/skills/photophysical-data-extractor/
+```
+
+项目级可使用：
+
+```text
+<projectRoot>/.dsh/skills/photophysical-data-extractor/
+<projectRoot>/.agents/skills/photophysical-data-extractor/
+```
+
+从有权限的 GitHub 账户下载或克隆本仓库到其中一个目录，并确认
+`photophysical-data-extractor/SKILL.md` 只位于 Skill 根目录下一层。
+DSH 的文件系统 provider 会读取标准 `SKILL.md` 及其资源文件。已有会话若未
+刷新 Skill 列表，请创建新会话或重启 dsh。
+
+使用 skills CLI 的 `--global` 安装也会落到 `~/.agents/skills/`，该路径同样在
+DSH 的用户共享扫描范围内，因此无需重复安装。
+
+完整半自动化流程还要求 dsh 当前 profile 向 Agent 提供 PDF/文件读取、文件写入
+和 Python/命令执行能力；如果脚本运行能力不可用，PDE 必须报告
+`PDE script runtime unavailable`，不得声称已经完成半自动流程。
+
+### 豆包模型
+
+PDE 可以由使用豆包模型的 Agent 宿主执行，但宿主必须同时支持：
+
+- 标准 Agent Skills/`SKILL.md`；
+- 读取论文 PDF 与 SI；
+- 执行 Python 脚本；
+- 写入并校验 JSON/HTML。
+
+普通豆包网页端、移动端或仅聊天模式不具备完整脚本运行环境，因此不能直接安装
+并完整运行半自动化 PDE。对于这类环境，应由外部本地控制器执行 PDF 索引、DOI
+抓取、JSON 校验和审计，再把结构化文本交给豆包模型完成语义抽取。不要使用未经
+支持的 `--agent doubao` 安装命令。
 
 ✨ 面向有机材料光物理与电子结构论文的证据可溯源数据抽取 Skill，简称 **PDE**。除发光光谱、寿命和效率外，默认抽取并显示 HOMO、LUMO、S1、T1、ΔEST、CPL 的 g_lum 与 CD/ECD 的 g_abs。
 
@@ -195,7 +267,7 @@ k_isc, k_risc, k_rp, knr_p
 - Windows 下不得直接调用裸 `python`，以免命中无功能的 Microsoft Store 占位符；
 - 扫描版 PDF 或图片型表格可能需要 OCR 或视觉模型。
 
-无论使用 Codex、Claude、Kimi、DeepSeek 或其他模型，都应保留 JSON 校验、证据链接及中低置信度人工复核。上传论文到云端模型前，请自行核对版权、保密和数据处理政策。
+无论使用 Codex、Claude Code、WorkBuddy、DeepSeek Harness，还是运行在合格 Agent 宿主中的豆包模型，都必须保留 JSON 校验、证据链接及中低置信度人工复核。上传论文到云端模型前，请核对版权、保密和数据处理政策。
 
 ## 📚 进一步阅读
 

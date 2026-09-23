@@ -28,22 +28,71 @@
 
 ### 安装 Skill
 
-不要要求用户手动克隆私人仓库。使用 skills CLI 安装：
+本仓库是 GitHub Private repository。安装前必须确认当前 Git/GitHub 凭据具有 `PPOLAN-hub/photophysical-data-extractor` 的访问权限；仅在浏览器中登录 GitHub 不等于命令行已获得私有仓库访问权限。不要把 Personal Access Token 写入命令、提示词、聊天记录或仓库。
+
+本次文档更新发布后，当前稳定版本为 `skill-v1.4.1`。
+
+使用 skills CLI 做首次全局安装：
 
 ```powershell
-npx skills add PPOLAN-hub/photophysical-data-extractor --skill photophysical-data-extractor --agent codex
+npx skills@latest add PPOLAN-hub/photophysical-data-extractor --skill photophysical-data-extractor --agent codex --global --yes
+npx skills@latest add PPOLAN-hub/photophysical-data-extractor --skill photophysical-data-extractor --agent claude-code --global --yes
 ```
 
-其他 Agent 可将 `codex` 替换为对应标识，例如：
+已安装版本升级：
 
 ```powershell
-npx skills add PPOLAN-hub/photophysical-data-extractor --skill photophysical-data-extractor --agent claude-code
-npx skills add PPOLAN-hub/photophysical-data-extractor --skill photophysical-data-extractor --agent kimi-cli
+npx skills@latest update photophysical-data-extractor --global --yes
 ```
 
-私人仓库要求当前 GitHub 账号已经获得访问权限。不要把 Personal Access Token 写入命令、提示词或聊天记录。
+升级后必须开启新的 Agent 会话；宿主仍缓存旧 Skill 时需重启对应 Agent。
 
-Cherry Studio 1.9.12 或更新版本使用界面安装：先从有权限的 GitHub 页面下载 ZIP，再进入 `设置 → 技能 → 从 ZIP 文件安装`，最后在目标 Agent 的技能设置中启用本 Skill。
+`--global` 安装会落到用户级共享目录 `~/.agents/skills/`，该路径同时位于 DeepSeek Harness 的用户共享扫描范围；在 Codex 中改用 `--agent codex` 是同一效果，不需要重复安装。
+
+#### WorkBuddy
+
+WorkBuddy 没有对应的 skills CLI 目标标识，必须用目录安装。用户级目录：
+
+```text
+~/.workbuddy/skills/photophysical-data-extractor/
+```
+
+项目级目录：
+
+```text
+<workspace>/.workbuddy/skills/photophysical-data-extractor/
+```
+
+从有权限的 GitHub 账户下载本仓库，把完整目录复制到上述位置，并确认 `photophysical-data-extractor/SKILL.md` 直接存在，且同级保留 `scripts/`、`references/`、`requirements.txt` 和 `runtime_config.json`。不要只复制 `SKILL.md`。安装或升级后刷新 Skill 列表；未出现时重启 WorkBuddy。
+
+#### DeepSeek Harness（dsh）
+
+DeepSeek Harness 的文件系统 Skill provider 扫描以下根目录：
+
+```text
+<projectRoot>/.dsh/skills/
+<projectRoot>/.agents/skills/
+$DSH_HOME/skills/          # 默认通常为 ~/.dsh/skills/
+~/.agents/skills/          # 用户共享
+```
+
+安装到其中一个目录：
+
+```text
+~/.dsh/skills/photophysical-data-extractor/
+<projectRoot>/.dsh/skills/photophysical-data-extractor/
+<projectRoot>/.agents/skills/photophysical-data-extractor/
+```
+
+该 provider 只发现一层目录结构，目标必须正好是 `<skill-root>/photophysical-data-extractor/SKILL.md`。不要把整个仓库目录再套一层，否则不会被识别。已有会话未刷新 Skill 列表时，创建新会话或重启 dsh。
+
+完整半自动化流程还要求 dsh 当前 profile 向 Agent 提供 PDF/文件读取、文件写入和 Python/命令执行能力。脚本运行能力不可用时，PDE 必须报告 `PDE script runtime unavailable`，不得声称已经完成半自动流程。
+
+#### 豆包模型
+
+PDE 可以由使用豆包模型的 Agent 宿主执行，但宿主必须同时支持标准 Agent Skills/`SKILL.md`、读取论文 PDF 与 SI、执行 Python 脚本，以及写入并校验 JSON/HTML。
+
+普通豆包网页端、移动端或仅聊天模式不具备完整脚本运行环境，不能直接安装并完整运行半自动化 PDE。这类环境应由外部本地控制器完成 PDF 索引、DOI 抓取、JSON 校验和审计，再把结构化文本交给豆包模型做语义抽取。不要使用未经支持的 `--agent doubao` 安装命令。
 
 ## 3. 用户调用方式
 
