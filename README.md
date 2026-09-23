@@ -7,7 +7,7 @@
 GitHub 不等于命令行已经获得私有仓库访问权限。不要把 Personal Access Token
 写入命令、README、聊天记录或仓库。
 
-本次文档更新发布后，当前稳定版本为 `skill-v1.4.1`。
+本次豆包发行支持更新后，当前稳定版本为 `skill-v1.4.2`。
 
 ### Claude Code
 
@@ -84,19 +84,26 @@ DSH 的用户共享扫描范围内，因此无需重复安装。
 和 Python/命令执行能力；如果脚本运行能力不可用，PDE 必须报告
 `PDE script runtime unavailable`，不得声称已经完成半自动流程。
 
-### 豆包模型
+### 豆包工作
 
-PDE 可以由使用豆包模型的 Agent 宿主执行，但宿主必须同时支持：
+适用于带“工作”模式和“插件 · 技能 · 伙伴”入口的豆包桌面端。不要使用
+`--agent doubao`；从 Release 下载
+`photophysical-data-extractor-doubao-skill-v1.4.2.zip`，然后：
 
-- 标准 Agent Skills/`SKILL.md`；
-- 读取论文 PDF 与 SI；
-- 执行 Python 脚本；
-- 写入并校验 JSON/HTML。
+1. 切换到“工作”；
+2. 打开“插件 · 技能 · 伙伴”；
+3. 选择“新建/上传技能”并上传 ZIP；
+4. 返回工作对话，从输入框下方“技能”选择 `photophysical-data-extractor`；
+5. 先运行环境自检提示词，通过后再上传论文正文和 SI。
 
-普通豆包网页端、移动端或仅聊天模式不具备完整脚本运行环境，因此不能直接安装
-并完整运行半自动化 PDE。对于这类环境，应由外部本地控制器执行 PDF 索引、DOI
-抓取、JSON 校验和审计，再把结构化文本交给豆包模型完成语义抽取。不要使用未经
-支持的 `--agent doubao` 安装命令。
+该 ZIP 经过白名单打包，`SKILL.md` 直接位于压缩包根目录；不要使用 GitHub
+自动生成且可能多套一层目录的 Source code ZIP。完整安装步骤、环境自检提示词和
+正式调用提示词见
+[`references/doubao-install-and-prompts.md`](references/doubao-install-and-prompts.md)。
+
+豆包必须能够执行 Python 并读写本地文件，才可声称完成半自动化 PDE；若环境检查
+失败，必须输出 `PDE script runtime unavailable`。普通豆包聊天模式只能使用
+自然语言流程。
 
 ✨ 面向有机材料光物理与电子结构论文的证据可溯源数据抽取 Skill，简称 **PDE**。除发光光谱、寿命和效率外，默认抽取并显示 HOMO、LUMO、S1、T1、ΔEST、CPL 的 g_lum 与 CD/ECD 的 g_abs。
 

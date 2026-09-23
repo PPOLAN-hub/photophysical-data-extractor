@@ -17,3 +17,4 @@ batch_report.json
 batch_report.html
 *_candidate.json
 *.log
+dist/

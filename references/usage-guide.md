@@ -30,7 +30,7 @@
 
 本仓库是 GitHub Private repository。安装前必须确认当前 Git/GitHub 凭据具有 `PPOLAN-hub/photophysical-data-extractor` 的访问权限；仅在浏览器中登录 GitHub 不等于命令行已获得私有仓库访问权限。不要把 Personal Access Token 写入命令、提示词、聊天记录或仓库。
 
-本次文档更新发布后，当前稳定版本为 `skill-v1.4.1`。
+本次豆包发行支持更新后，当前稳定版本为 `skill-v1.4.2`。
 
 使用 skills CLI 做首次全局安装：
 
@@ -88,11 +88,21 @@ $DSH_HOME/skills/          # 默认通常为 ~/.dsh/skills/
 
 完整半自动化流程还要求 dsh 当前 profile 向 Agent 提供 PDF/文件读取、文件写入和 Python/命令执行能力。脚本运行能力不可用时，PDE 必须报告 `PDE script runtime unavailable`，不得声称已经完成半自动流程。
 
-#### 豆包模型
+#### 豆包工作
 
-PDE 可以由使用豆包模型的 Agent 宿主执行，但宿主必须同时支持标准 Agent Skills/`SKILL.md`、读取论文 PDF 与 SI、执行 Python 脚本，以及写入并校验 JSON/HTML。
+带“工作”模式和“插件 · 技能 · 伙伴”入口的豆包桌面端支持上传标准技能包。不要使用未经支持的 `--agent doubao` 命令。从 Release 下载 `photophysical-data-extractor-doubao-skill-v1.4.2.zip`，在“工作 → 插件 · 技能 · 伙伴 → 新建/上传技能”中上传。安装后从工作对话输入框下方的“技能”选择 `photophysical-data-extractor`。
 
-普通豆包网页端、移动端或仅聊天模式不具备完整脚本运行环境，不能直接安装并完整运行半自动化 PDE。这类环境应由外部本地控制器完成 PDF 索引、DOI 抓取、JSON 校验和审计，再把结构化文本交给豆包模型做语义抽取。不要使用未经支持的 `--agent doubao` 安装命令。
+豆包发行 ZIP 必须由 `scripts/package_doubao_skill.py` 生成，确保 `SKILL.md` 位于 ZIP 根目录，完整保留脚本和参考资料，并排除测试、论文、密钥、本机配置和 Git 元数据。不要上传 GitHub 自动生成的 Source code ZIP。
+
+安装后必须先运行环境自检。豆包能够执行 `check_environment.py`、读取 PDF、写入 JSON/HTML 并执行后续索引和校验脚本，才算支持半自动化 PDE。失败时必须报告 `PDE script runtime unavailable`。完整安装步骤、环境自检提示词和正式调用提示词见 [`doubao-install-and-prompts.md`](doubao-install-and-prompts.md)。
+
+维护者生成豆包发行附件：
+
+```powershell
+<selected-python> scripts/package_doubao_skill.py --version skill-v1.4.2 --output-dir <release-assets-directory>
+```
+
+将生成的 ZIP 与同名 `.sha256` 文件一并上传到 GitHub Release；二进制发行附件不得提交进 Git 历史。
 
 ## 3. 用户调用方式
 
